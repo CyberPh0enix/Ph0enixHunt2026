@@ -1,11 +1,20 @@
-import { useRef, useEffect, useState } from "react";
-import { RefreshCw, ArrowLeft, ArrowRight, Home, Lock } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
+import {
+  RefreshCw,
+  ArrowLeft,
+  ArrowRight,
+  Home,
+  Lock,
+  Unlock,
+  ExternalLink,
+} from "lucide-react";
 
 // --- PUZZLE PAGES ---
 
 const PageLevel1 = () => {
   const containerRef = useRef(null);
-
   useEffect(() => {
     if (containerRef.current) {
       const comment = document.createComment(
@@ -21,14 +30,10 @@ const PageLevel1 = () => {
         Welcome to CorpNet
       </h1>
       <p className="mb-4">
-        We are the leading providers of obfuscated solutions. Our developers
-        leave notes everywhere.
+        We are the leading providers of obfuscated solutions.
       </p>
-
       <div className="bg-yellow-100 p-4 border-l-4 border-yellow-500 text-yellow-700">
         <p className="font-bold">Maintenance Note:</p>
-
-        {/* We attach the ref here so the comment appears RIGHT HERE */}
         <p ref={containerRef}>
           Please do not inspect the source code of this page. It is trade
           secret.
@@ -45,10 +50,7 @@ const PageLevel2 = () => {
       <p>There is nothing to see here.</p>
       <br />
       <div className="bg-black p-10 mt-10 relative select-none">
-        {" "}
-        {/* select-none prevents accidentally highlighting unless specifically on the text */}
         <p className="text-white mb-4">Dark Mode Enabled.</p>
-        {/* We use a string literal {'...'} to escape the braces */}
         <p className="text-black select-text selection:bg-white selection:text-black">
           {"flag{contrast_is_key}"}
         </p>
@@ -84,51 +86,146 @@ const PageLevel3 = () => {
   );
 };
 
-// --- BROWSER SHELL ---
+// --- BROWSER SHELL WITH LOCKING LOGIC ---
 
 export default function Browser({ onClose }) {
+  const { user } = useAuth();
   const [url, setUrl] = useState("https://corpnet.internal/home");
   const [history, setHistory] = useState(["https://corpnet.internal/home"]);
+
+  // State to track what the user has unlocked
+  const [solvedIds, setSolvedIds] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 1. Fetch Solved Puzzles on Mount
+  useEffect(() => {
+    async function fetchProgress() {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("solved_puzzles")
+        .select("puzzle_id")
+        .eq("user_id", user.id);
+
+      if (data) {
+        // Convert to simple array: ['level-01', 'level-02']
+        setSolvedIds(data.map((row) => row.puzzle_id));
+      }
+      setLoading(false);
+    }
+    fetchProgress();
+  }, [user]);
 
   const navigate = (newUrl) => {
     setUrl(newUrl);
     setHistory([...history, newUrl]);
   };
 
+  // 2. The Logic: Is a level locked?
+  // Level 1: Always Open
+  // Level 2: Requires 'level-01' solved
+  // Level 3: Requires 'level-02' solved
+  const isLevel1Solved = solvedIds.includes("level-01");
+  const isLevel2Solved = solvedIds.includes("level-02");
+  const isLevel3Solved = solvedIds.includes("level-03");
+
   const renderContent = () => {
     switch (url) {
       case "https://corpnet.internal/home":
         return (
-          <div className="p-10 grid gap-6">
-            <h1 className="text-2xl font-bold">Internal Bookmarks</h1>
+          <div className="p-10 grid gap-6 max-w-3xl mx-auto">
+            <h1 className="text-2xl font-bold mb-4">Internal Bookmarks</h1>
+
+            {/* LINK 1: DEV NOTES (Always Open) */}
             <div
               onClick={() => navigate("https://corpnet.internal/dev-notes")}
-              className="p-4 border rounded cursor-pointer hover:bg-gray-50 bg-white shadow-sm"
+              className="group p-4 border rounded-xl cursor-pointer hover:shadow-md bg-white transition-all flex justify-between items-center"
             >
-              <h3 className="font-bold text-blue-600">
-                Dev Team Notes (Level 1)
-              </h3>
-              <p className="text-sm text-gray-500">
-                HTML Source Code Inspection
-              </p>
+              <div>
+                <h3 className="font-bold text-blue-600 group-hover:underline flex items-center gap-2">
+                  Dev Team Notes{" "}
+                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
+                    Level 1
+                  </span>
+                </h3>
+                <p className="text-sm text-gray-500">
+                  HTML Source Code Inspection
+                </p>
+              </div>
+              {isLevel1Solved ? (
+                <div className="text-green-500 font-bold text-xs">SOLVED ✓</div>
+              ) : (
+                <ExternalLink size={16} className="text-gray-400" />
+              )}
             </div>
+
+            {/* LINK 2: DESIGN SYSTEM (Locked until L1 Solved) */}
             <div
-              onClick={() => navigate("https://corpnet.internal/design-v2")}
-              className="p-4 border rounded cursor-pointer hover:bg-gray-50 bg-white shadow-sm"
+              onClick={() =>
+                isLevel1Solved
+                  ? navigate("https://corpnet.internal/design-v2")
+                  : null
+              }
+              className={`p-4 border rounded-xl transition-all flex justify-between items-center ${
+                isLevel1Solved
+                  ? "cursor-pointer hover:shadow-md bg-white"
+                  : "cursor-not-allowed bg-gray-100 opacity-60"
+              }`}
             >
-              <h3 className="font-bold text-blue-600">
-                Design System V2 (Level 2)
-              </h3>
-              <p className="text-sm text-gray-500">
-                Contrast & Selection Tests
-              </p>
+              <div>
+                <h3 className="font-bold text-blue-600 flex items-center gap-2">
+                  Design System V2{" "}
+                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full">
+                    Level 2
+                  </span>
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Contrast & Selection Tests
+                </p>
+              </div>
+              {/* Show Lock or Unlock icon based on status */}
+              {isLevel1Solved ? (
+                isLevel2Solved ? (
+                  <div className="text-green-500 font-bold text-xs">
+                    SOLVED ✓
+                  </div>
+                ) : (
+                  <ExternalLink size={16} className="text-gray-400" />
+                )
+              ) : (
+                <Lock size={16} className="text-red-400" />
+              )}
             </div>
+            {/* LINK 3: SYSTEM LOGS (Locked until L2 Solved) */}
             <div
-              onClick={() => navigate("https://corpnet.internal/logs")}
-              className="p-4 border rounded cursor-pointer hover:bg-gray-50 bg-white shadow-sm"
+              onClick={() =>
+                isLevel2Solved || isLevel3Solved
+                  ? navigate("https://corpnet.internal/logs")
+                  : null
+              }
+              className={`p-4 border rounded-xl transition-all flex justify-between items-center ${
+                isLevel2Solved || isLevel3Solved
+                  ? "cursor-pointer hover:shadow-md bg-white"
+                  : "cursor-not-allowed bg-gray-100 opacity-60"
+              }`}
             >
-              <h3 className="font-bold text-blue-600">System Logs (Level 3)</h3>
-              <p className="text-sm text-gray-500">Console Debugging</p>
+              <div>
+                <h3 className="font-bold text-blue-600 flex items-center gap-2">
+                  System Logs{" "}
+                  <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">
+                    Level 3
+                  </span>
+                </h3>
+                <p className="text-sm text-gray-500">Console Debugging</p>
+              </div>
+
+              {/* VISUAL LOGIC: Solved? -> Show Check. Open? -> Show Arrow. Locked? -> Show Lock. */}
+              {isLevel3Solved ? (
+                <div className="text-green-500 font-bold text-xs">SOLVED ✓</div>
+              ) : isLevel2Solved ? (
+                <ExternalLink size={16} className="text-gray-400" />
+              ) : (
+                <Lock size={16} className="text-red-400" />
+              )}
             </div>
           </div>
         );
@@ -188,7 +285,14 @@ export default function Browser({ onClose }) {
       </div>
 
       {/* Website Content */}
-      <div className="flex-1 overflow-y-auto bg-white">{renderContent()}</div>
+      <div className="flex-1 overflow-y-auto bg-white relative">
+        {loading && url === "https://corpnet.internal/home" && (
+          <div className="absolute top-0 left-0 w-full h-1 bg-blue-100 overflow-hidden">
+            <div className="w-full h-full bg-blue-500 animate-pulse"></div>
+          </div>
+        )}
+        {renderContent()}
+      </div>
     </div>
   );
 }
