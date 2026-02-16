@@ -3,6 +3,7 @@ import Level02 from "../components/puzzles/Level02";
 import Level03 from "../components/puzzles/Level03";
 import Level04 from "../components/puzzles/Level04";
 import Level05 from "../components/puzzles/Level05";
+import Level06 from "../components/puzzles/Level06";
 
 export const PUZZLE_CONFIG = [
   {
@@ -49,5 +50,14 @@ export const PUZZLE_CONFIG = [
     component: Level05,
     requires: "level-04", // Links it to Level 4
     color: "bg-yellow-100 text-yellow-800",
+  },
+  {
+    id: "level-06",
+    title: "Session Manager",
+    desc: "Storage Inspection",
+    url: "https://corpnet.internal/auth",
+    component: Level06,
+    requires: "level-05",
+    color: "bg-green-100 text-green-800",
   },
 ];
