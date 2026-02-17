@@ -11,8 +11,13 @@ export default function Terminal({ onClose }) {
   ]);
   const [input, setInput] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [crash, setCrash] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+
+  if (crash) {
+    throw new Error("MANUAL_KERNEL_PANIC_INITIATED_BY_USER");
+  }
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -93,6 +98,14 @@ export default function Terminal({ onClose }) {
               "ACCESS DENIED. Invalid flag or already solved.",
             );
           }
+          break;
+
+        case "panic":
+          addToHistory("system", "DKMS: modules installed");
+          addToHistory("system", "Initiating kernel dump...");
+          setTimeout(() => {
+            setCrash(true);
+          }, 1000);
           break;
 
         default:
