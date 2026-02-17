@@ -75,7 +75,8 @@ export const PUZZLE_CONFIG = [
     title: "Hidden Services",
     desc: "Network Port Analysis",
     command: "netstat",
-    flag: "flag{ports_are_open}",
+    flagHash:
+      "ef73643c56c4e933fb2ce904efc1d4569a93b2eecae9be4748ec4bdc91c4d334",
     requires: "level-06",
     color: "bg-neutral-800 text-green-500",
   },

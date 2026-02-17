@@ -1,32 +1,65 @@
+import { useState } from "react";
+
 export default function Level05() {
+  const [revealed, setRevealed] = useState(false);
+
+  // CRITICAL: This throws the error when the state changes
+  if (revealed) {
+    // This string will be visible in the Console and on the Crash Screen
+    // It survives production minification!
+    throw new Error("CRITICAL_FAILURE: flag{z_index_hides_all_sins}");
+  }
+
+  const handleRealClick = () => {
+    setRevealed(true); // This triggers the re-render -> causing the throw above
+  };
+
+  const handleFakeClick = () => {
+    alert(
+      "ADVERTISEMENT CLICKED! (You need to remove this element, not click it)",
+    );
+  };
+
   return (
-    <div className="p-8 relative h-full min-h-[500px] overflow-hidden">
-      <h1 className="text-2xl font-bold mb-4">The "Corrupted" Image</h1>
-      <p className="mb-4">
-        The recovery key is printed on this page, but this annoying ad is
-        blocking it.
+    <div className="p-4 sm:p-10 flex flex-col items-center justify-center min-h-[60vh] relative">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
+        Corrupted Display Interface
+      </h1>
+
+      <div className="relative w-full max-w-md h-64 bg-gray-200 rounded-xl border-4 border-dashed border-gray-400 flex items-center justify-center overflow-hidden">
+        {/* THE BUTTON (Hidden under ad) */}
+        <button
+          onClick={handleRealClick}
+          className="bg-blue-600 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-blue-700 transition-transform active:scale-95 z-0"
+        >
+          GENERATE SYSTEM FLAG
+        </button>
+
+        {/* THE BLOCKER (Top Layer) */}
+        <div
+          onClick={handleFakeClick}
+          className="absolute inset-0 bg-red-600/90 z-50 flex flex-col items-center justify-center cursor-pointer hover:bg-red-600 transition-colors"
+          title="Delete me in Elements tab!"
+        >
+          <h2 className="text-white text-4xl font-black tracking-tighter transform -rotate-12 drop-shadow-md">
+            ADVERTISEMENT
+          </h2>
+          <p className="text-white/80 font-mono mt-4 text-center px-6">
+            Buy Ph0enix Pro to remove ads!
+          </p>
+          <span className="text-white/50 text-xs mt-8 font-mono">
+            (Hint: z-index: 50)
+          </span>
+        </div>
+      </div>
+
+      <p className="mt-8 text-gray-500 max-w-md text-center text-sm">
+        System Error: Interface blocked by promotional layer.
         <br />
-        <span className="text-sm text-gray-500">
-          (Hint: Use the Element Inspector to delete the ad or lower its
-          z-index)
+        <span className="font-mono text-blue-500">
+          Action Required: Modify DOM to access underlying controls.
         </span>
       </p>
-
-      {/* THE FLAG (Hidden behind the overlay) */}
-      <div className="absolute top-40 left-20 bg-green-100 p-6 border-2 border-green-500 z-0">
-        <p className="font-bold text-green-800">RECOVERY KEY FOUND:</p>
-        <code className="text-xl font-mono text-black">
-          {"flag{z_index_hides_all_sins}"}
-        </code>
-      </div>
-
-      {/* THE BLOCKER (High Z-Index) */}
-      {/* This div covers the flag. User must delete it. */}
-      <div className="absolute top-32 left-10 w-[400px] h-[300px] bg-red-600 text-white flex flex-col items-center justify-center font-bold text-2xl z-50 shadow-2xl rotate-3 border-4 border-yellow-400">
-        <span className="text-6xl mb-2">⚠️</span>
-        <span>CRITICAL ERROR</span>
-        <span className="text-sm font-normal mt-2">Please contact support</span>
-      </div>
     </div>
   );
 }
