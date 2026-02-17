@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
-import { PUZZLE_CONFIG } from "../../data/puzzles"; // <--- The Config!
+import { PUZZLE_CONFIG } from "../../data/puzzles";
 import {
   RefreshCw,
   ArrowLeft,
@@ -18,7 +18,6 @@ export default function Browser({ onClose }) {
   const [solvedIds, setSolvedIds] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. Fetch Solved Status
   useEffect(() => {
     async function fetchProgress() {
       if (!user) return;
@@ -37,8 +36,11 @@ export default function Browser({ onClose }) {
     setHistory([...history, newUrl]);
   };
 
-  // 2. Find Current Puzzle Component
-  const currentPuzzle = PUZZLE_CONFIG.find((p) => p.url === url);
+  // 1. FILTER: Only get Browser Puzzles
+  const browserPuzzles = PUZZLE_CONFIG.filter((p) => p.type === "browser");
+
+  // 2. FIND: Only look for browser components
+  const currentPuzzle = browserPuzzles.find((p) => p.url === url);
 
   const renderContent = () => {
     if (url === "https://corpnet.internal/home") {
@@ -46,10 +48,9 @@ export default function Browser({ onClose }) {
         <div className="p-10 grid gap-6 max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold mb-4">Internal Bookmarks</h1>
 
-          {/* 3. DYNAMIC RENDERING LOOP */}
-          {PUZZLE_CONFIG.map((puzzle) => {
+          {/* Render ONLY Browser Puzzles */}
+          {browserPuzzles.map((puzzle) => {
             const isSolved = solvedIds.includes(puzzle.id);
-            // It is unlocked if: It has no requirement OR the requirement is solved
             const isUnlocked =
               !puzzle.requires || solvedIds.includes(puzzle.requires);
 
@@ -95,7 +96,6 @@ export default function Browser({ onClose }) {
       );
     }
 
-    // 4. Render the Puzzle Component if URL matches
     if (currentPuzzle) {
       const Component = currentPuzzle.component;
       return <Component />;
@@ -110,7 +110,7 @@ export default function Browser({ onClose }) {
 
   return (
     <div className="h-full bg-gray-50 text-black flex flex-col font-sans">
-      {/* Browser Toolbar */}
+      {/* Toolbar */}
       <div className="bg-white p-2 flex gap-2 items-center border-b border-gray-300 shadow-sm shrink-0">
         <div className="flex gap-1">
           <div
