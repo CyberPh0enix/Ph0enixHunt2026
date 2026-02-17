@@ -107,17 +107,17 @@ export default function Desktop() {
 
           {/* Desktop App Grid */}
           {!activeApp && (
-            <div className="absolute top-12 left-6 grid grid-cols-1 gap-6 z-10 animate-in fade-in duration-500">
+            <div className="absolute top-12 left-6 bottom-24 w-auto flex flex-col flex-wrap gap-4 z-10 content-start animate-in fade-in duration-500">
               {apps.map((app) => (
                 <button
                   key={app.id}
                   onClick={() => setActiveApp(app)}
-                  className="flex flex-col items-center gap-2 group w-20"
+                  className="flex flex-col items-center gap-1 group w-20 p-2 rounded-xl hover:bg-white/5 transition-colors"
                 >
-                  <div className="w-16 h-16 rounded-xl bg-black/20 backdrop-blur-sm border border-white/5 flex items-center justify-center shadow-lg group-hover:bg-white/10 transition-all">
-                    <app.icon size={32} className={app.color} />
+                  <div className="w-14 h-14 rounded-xl bg-black/20 backdrop-blur-sm border border-white/5 flex items-center justify-center shadow-lg group-hover:bg-white/10 transition-all">
+                    <app.icon size={28} className={app.color} />
                   </div>
-                  <span className="text-xs font-medium text-shadow drop-shadow-md">
+                  <span className="text-[10px] font-medium text-shadow drop-shadow-md truncate w-full text-center">
                     {app.name}
                   </span>
                 </button>

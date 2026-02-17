@@ -7,7 +7,7 @@ import { Lock, User, ChevronRight, Loader2, Cpu } from "lucide-react";
 export default function LockScreen() {
   const { login, signup } = useAuth();
   // Using the safer hook we fixed earlier
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
