@@ -1,3 +1,5 @@
+import { SYSTEM_DATA } from "../config/build.prop";
+
 import Level01 from "../components/puzzles/Level01";
 import Level02 from "../components/puzzles/Level02";
 import Level03 from "../components/puzzles/Level03";
@@ -15,7 +17,7 @@ export const PUZZLE_CONFIG = [
     type: "browser",
     title: "Dev Team Notes",
     desc: "HTML Source Code Inspection",
-    url: "https://corpnet.internal/dev-notes",
+    path: "dev-notes",
     component: Level01,
     encryptedFlag:
       "666c61677b68746d6c5f636f6d6d656e74735f6172655f6e6f745f7365637572657d",
@@ -27,7 +29,7 @@ export const PUZZLE_CONFIG = [
     type: "browser",
     title: "Design System V2",
     desc: "Contrast & Selection Tests",
-    url: "https://corpnet.internal/design-v2",
+    path: "design-v2",
     component: Level02,
     encryptedFlag: "666c61677b636f6e74726173745f69735f6b65797d",
     requires: "level-01",
@@ -38,7 +40,7 @@ export const PUZZLE_CONFIG = [
     type: "browser",
     title: "System Logs",
     desc: "Console Debugging",
-    url: "https://corpnet.internal/logs",
+    path: "logs",
     component: Level03,
     encryptedFlag: "666c61677b636f6e736f6c655f6c6f675f6d61737465727d",
     requires: "level-02",
@@ -49,7 +51,7 @@ export const PUZZLE_CONFIG = [
     type: "browser",
     title: "Secure Transmission",
     desc: "Encoding Analysis",
-    url: "https://corpnet.internal/secure-transmission",
+    path: "secure-transmission",
     component: Level04,
     encryptedFlag:
       "666c61677b6261736536345f69735f6e6f745f656e6372797074696f6e7d",
@@ -61,7 +63,7 @@ export const PUZZLE_CONFIG = [
     type: "browser",
     title: "Corrupted Display",
     desc: "CSS Layer Analysis",
-    url: "https://corpnet.internal/ads",
+    path: "ads",
     component: Level05,
     encryptedFlag: "666c61677b7a5f696e6465785f68696465735f616c6c5f73696e737d",
     requires: "level-04",
@@ -72,7 +74,7 @@ export const PUZZLE_CONFIG = [
     type: "browser",
     title: "Session Manager",
     desc: "Storage Inspection",
-    url: "https://corpnet.internal/auth",
+    path: "auth",
     component: Level06,
     encryptedFlag: "666c61677b636f6f6b6965735f6172655f74617374797d",
     requires: "level-05",

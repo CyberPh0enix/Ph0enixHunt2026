@@ -6,8 +6,13 @@ export const SYSTEM_DATA = {
   kernel: "Linux 6.9.1-hardened",
   arch: "x86_64",
   device: "Ph0enix One",
-  developer: "Uday",
+  developer: "UDAY",
   website: "https://cyber.ph0enix",
+  orgName: "CyberPh0enix",
+  orgShort: "CP",
+  intranetTitle: "CyberPh0enix Uplink",
+  intranetSubtitle: "Secure Operations Gateway v4.0.4",
+  gatewayId: "10.0.0.1 (Ph0enix-GW)",
 };
 
 export const WALLPAPER_mVjq =

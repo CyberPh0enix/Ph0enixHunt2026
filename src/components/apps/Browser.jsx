@@ -2,25 +2,163 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { PUZZLE_CONFIG } from "../../data/puzzles";
+import { SYSTEM_DATA } from "../../config/build.prop";
 import {
   RefreshCw,
   ArrowLeft,
   ArrowRight,
   Home,
   Lock,
-  ExternalLink,
-  CheckCircle,
-  XCircle,
+  Search,
+  ShieldAlert,
+  FileQuestion,
+  X,
 } from "lucide-react";
+
+// --- ERROR COMPONENTS ---
+
+const Error403 = ({ url }) => (
+  <div className="flex flex-col items-center justify-center min-h-full bg-white text-gray-800 p-8 text-center font-sans animate-in fade-in duration-300">
+    <ShieldAlert size={64} className="text-red-600 mb-6" />
+    <h1 className="text-3xl font-bold text-gray-900 mb-2">Access Denied</h1>
+    <p className="max-w-md text-gray-600 mb-8 leading-relaxed text-sm">
+      You do not have the required security clearance for <br />
+      <code className="bg-red-50 text-red-700 px-2 py-1 rounded text-xs mt-2 inline-block">
+        {url}
+      </code>
+    </p>
+    <div className="text-[10px] text-gray-400 font-mono border-t pt-4 w-full max-w-xs mx-auto">
+      ERR_BLOCKED_BY_ADMIN
+      <br />
+      Ref: {Math.random().toString(36).substring(7).toUpperCase()}
+    </div>
+  </div>
+);
+
+const Error404 = ({ url }) => (
+  <div className="flex flex-col items-center justify-center min-h-full bg-white text-gray-800 p-8 text-center font-sans animate-in fade-in duration-300">
+    <FileQuestion size={64} className="text-amber-500 mb-6" />
+    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      Resource Not Found
+    </h1>
+
+    <div className="w-16 h-1 bg-amber-500 mb-6 rounded-full"></div>
+
+    <p className="max-w-md text-gray-600 mb-8 leading-relaxed text-sm">
+      The server could not locate the requested file directory:
+      <br />
+      <code className="bg-amber-50 text-amber-700 px-2 py-1 rounded text-xs mt-2 inline-block border border-amber-100">
+        {url}
+      </code>
+    </p>
+
+    <div className="text-[10px] text-gray-400 font-mono border-t pt-4 w-full max-w-xs mx-auto">
+      ERR_FILE_NOT_FOUND
+      <br />
+      Gateway: {SYSTEM_DATA.gatewayId}
+    </div>
+  </div>
+);
+
+// --- NEW TAB PAGE (Native Feel) ---
+const IntranetHome = ({ onNavigate, browserPuzzles }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (e) => {
+    if (e.key === "Enter" && searchTerm.trim()) {
+      if (searchTerm.startsWith("/") || searchTerm.startsWith("http")) {
+        onNavigate(searchTerm);
+      } else {
+        onNavigate(`${SYSTEM_DATA.website}/${searchTerm}`);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-full flex flex-col items-center justify-center p-6 bg-white animate-in fade-in zoom-in duration-300">
+      <div className="flex-1 max-h-32 hidden sm:block"></div>
+
+      {/* Dynamic Brand */}
+      <div className="flex flex-col items-center mb-8 sm:mb-12">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-4 sm:mb-6 transform transition-transform hover:scale-105 hover:rotate-3">
+          <span className="text-white text-3xl sm:text-4xl font-bold tracking-tighter">
+            {SYSTEM_DATA.orgShort}
+          </span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">
+          {SYSTEM_DATA.intranetTitle}
+        </h1>
+        <p className="text-gray-400 mt-1 text-xs sm:text-sm font-medium">
+          {SYSTEM_DATA.intranetSubtitle}
+        </p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="w-full max-w-lg relative mb-10 group z-10">
+        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+          <Search
+            size={18}
+            className="text-gray-400 group-focus-within:text-blue-500 transition-colors"
+          />
+        </div>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleSearch}
+          placeholder={`Search ${SYSTEM_DATA.orgName} docs or enter URL...`}
+          className="w-full py-3 sm:py-4 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-full text-gray-800 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 focus:bg-white transition-all shadow-sm text-sm sm:text-base"
+          autoFocus
+        />
+      </div>
+
+      {/* Shortcuts */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 w-full max-w-3xl px-2">
+        {browserPuzzles.map((puzzle) => (
+          <button
+            key={puzzle.id}
+            onClick={() => onNavigate(`${SYSTEM_DATA.website}/${puzzle.path}`)}
+            className="flex flex-col items-center gap-3 group p-3 sm:p-4 rounded-xl hover:bg-gray-50 transition-colors active:scale-95"
+          >
+            <div
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110 ${puzzle.color.split(" ")[0].replace("bg-", "bg-opacity-90 bg-") || "bg-gray-500"}`}
+            >
+              <span className="font-bold text-base sm:text-lg">
+                {puzzle.title.charAt(0)}
+              </span>
+            </div>
+            <span className="text-xs sm:text-sm font-medium text-gray-600 group-hover:text-blue-600 text-center leading-tight">
+              {puzzle.title}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1"></div>
+
+      {/* Dynamic Footer */}
+      <div className="py-6 text-[10px] text-gray-300 font-mono uppercase tracking-widest text-center">
+        &copy; 2026 {SYSTEM_DATA.orgName} Systems. Restricted Access.
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN BROWSER ---
 
 export default function Browser({ onClose }) {
   const { user } = useAuth();
-  const [url, setUrl] = useState("https://corpnet.internal/home");
-  const [history, setHistory] = useState(["https://corpnet.internal/home"]);
-  const [solvedIds, setSolvedIds] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch user progress
+  const BASE_URL = SYSTEM_DATA.website;
+  const HOME_URL = `${BASE_URL}/home`;
+
+  const [url, setUrl] = useState(HOME_URL);
+  const [history, setHistory] = useState([HOME_URL]);
+  const [solvedIds, setSolvedIds] = useState([]);
+
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
+
   useEffect(() => {
     async function fetchProgress() {
       if (!user) return;
@@ -29,166 +167,129 @@ export default function Browser({ onClose }) {
         .select("puzzle_id")
         .eq("user_id", user.id);
       if (data) setSolvedIds(data.map((row) => row.puzzle_id));
-      setLoading(false);
+      setInitialLoad(false);
     }
     fetchProgress();
   }, [user]);
 
-  const navigate = (newUrl) => {
-    setUrl(newUrl);
-    setHistory([...history, newUrl]);
+  const navigate = (input) => {
+    let target = input;
+    if (input.startsWith("/")) {
+      target = `${BASE_URL}${input}`;
+    } else if (!input.startsWith("http") && !input.startsWith("https")) {
+      target = `https://${input}`;
+    }
+
+    setIsNavigating(true);
+    setUrl(target);
+
+    setTimeout(() => {
+      setHistory((prev) => [...prev, target]);
+      setIsNavigating(false);
+    }, 800);
   };
 
   const browserPuzzles = PUZZLE_CONFIG.filter((p) => p.type === "browser");
 
-  // FIND: Only look for browser components matching current URL
-  const currentPuzzle = browserPuzzles.find((p) => p.url === url);
-
   const renderContent = () => {
-    // --- HOME PAGE (Bookmarks) ---
-    if (url === "https://corpnet.internal/home") {
+    if (url === HOME_URL || url === BASE_URL || url === `${BASE_URL}/`) {
       return (
-        <div className="p-4 sm:p-8 w-full max-w-5xl mx-auto">
-          <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-800">
-            Internal Bookmarks
-          </h1>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {browserPuzzles.map((puzzle) => {
-              const isSolved = solvedIds.includes(puzzle.id);
-              const isUnlocked =
-                !puzzle.requires || solvedIds.includes(puzzle.requires);
-
-              return (
-                <div
-                  key={puzzle.id}
-                  onClick={() =>
-                    isUnlocked || isSolved ? navigate(puzzle.url) : null
-                  }
-                  className={`
-                    group relative p-4 border rounded-xl transition-all flex justify-between items-center gap-4
-                    ${
-                      isUnlocked || isSolved
-                        ? "cursor-pointer hover:shadow-md bg-white border-gray-200 hover:border-blue-300"
-                        : "cursor-not-allowed bg-gray-50 border-gray-200 opacity-60"
-                    }
-                  `}
-                >
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-gray-700 flex items-center gap-2 text-sm sm:text-base mb-1">
-                      {puzzle.title}
-                      {/* Optional ID Badge */}
-                      <span className="hidden sm:inline-block text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">
-                        {puzzle.id}
-                      </span>
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-500 truncate">
-                      {puzzle.desc}
-                    </p>
-                  </div>
-
-                  {/* Status Icons */}
-                  <div className="shrink-0">
-                    {isSolved ? (
-                      <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-100">
-                        <CheckCircle size={14} />
-                        <span className="text-[10px] font-bold">SOLVED</span>
-                      </div>
-                    ) : isUnlocked ? (
-                      <ExternalLink
-                        size={18}
-                        className="text-gray-400 group-hover:text-blue-500 transition-colors"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-1 text-red-400 bg-red-50 px-2 py-1 rounded-full border border-red-100">
-                        <Lock size={14} />
-                        <span className="text-[10px] font-bold">LOCKED</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <IntranetHome onNavigate={navigate} browserPuzzles={browserPuzzles} />
       );
     }
 
-    // --- PUZZLE COMPONENT ---
-    if (currentPuzzle) {
-      const Component = currentPuzzle.component;
-      return <Component />;
-    }
+    const puzzle = browserPuzzles.find((p) => url === `${BASE_URL}/${p.path}`);
 
-    // --- 404 PAGE ---
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8">
-        <h1 className="text-6xl font-bold mb-4">404</h1>
-        <p className="text-lg">Server Not Found</p>
-        <button
-          onClick={() => navigate("https://corpnet.internal/home")}
-          className="mt-6 text-blue-500 hover:underline"
-        >
-          Return Home
-        </button>
-      </div>
-    );
+    if (!puzzle) return <Error404 url={url} />;
+    if (puzzle.requires && !solvedIds.includes(puzzle.requires))
+      return <Error403 url={url} />;
+
+    const Component = puzzle.component;
+    return <Component />;
   };
 
   return (
-    <div className="h-full bg-gray-50 text-black flex flex-col font-sans overflow-hidden">
-      {/* 1. TOOLBAR (Fixed Height) */}
-      <div className="bg-white p-2 flex gap-2 items-center border-b border-gray-300 shadow-sm shrink-0 z-10">
-        {/* Window Controls (Cosmetic) */}
-        <div className="flex gap-1.5 ml-1 mr-2">
+    <div className="h-full bg-white text-black flex flex-col font-sans overflow-hidden relative">
+      {isNavigating && (
+        <div className="absolute top-[52px] left-0 w-full h-0.5 bg-gray-100 z-50">
+          <div className="h-full bg-blue-500 animate-progress shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+        </div>
+      )}
+
+      {/* TOOLBAR */}
+      <div className="bg-white p-2 flex gap-2 items-center border-b border-gray-200 shadow-sm shrink-0 z-40 relative">
+        <div className="hidden sm:flex gap-1.5 ml-1 mr-2">
           <div
-            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 cursor-pointer"
+            className="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500 cursor-pointer transition-colors"
             onClick={onClose}
           ></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+          <div className="w-3 h-3 rounded-full bg-green-400"></div>
         </div>
 
-        {/* Nav Controls */}
-        <div className="flex gap-2 text-gray-400 px-2">
-          <ArrowLeft
-            size={18}
-            className="cursor-pointer hover:text-black transition-colors"
-            onClick={() => {
-              if (url !== "https://corpnet.internal/home") {
-                navigate("https://corpnet.internal/home");
-              }
-            }}
-          />
-          <ArrowRight size={18} className="opacity-50 cursor-not-allowed" />
-          <RefreshCw
-            size={16}
-            className="hover:text-black cursor-pointer transition-colors"
-          />
+        <div className="flex gap-1 sm:gap-2 text-gray-500 px-1 sm:px-2">
+          <button
+            onClick={() => url !== HOME_URL && navigate(HOME_URL)}
+            className="p-1 rounded hover:bg-gray-100 transition-colors"
+          >
+            <ArrowLeft size={18} className="text-gray-700" />
+          </button>
+          <button
+            className="p-1 rounded hover:bg-gray-100 transition-colors hidden sm:block disabled:opacity-30"
+            disabled
+          >
+            <ArrowRight size={18} className="text-gray-700" />
+          </button>
+          <button
+            onClick={() => navigate(url)}
+            className="p-1 rounded hover:bg-gray-100 transition-colors"
+          >
+            <RefreshCw
+              size={16}
+              className={`text-gray-700 ${isNavigating ? "animate-spin" : ""}`}
+            />
+          </button>
         </div>
 
-        {/* Address Bar */}
-        <div className="flex-1 bg-gray-100 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-gray-600 flex items-center gap-2 border border-transparent focus-within:border-blue-400 focus-within:bg-white transition-all">
-          <Lock size={12} className="text-green-600" />
+        <div className="flex-1 bg-gray-100 rounded-full px-4 py-1.5 text-xs sm:text-sm text-gray-600 flex items-center gap-2 border border-transparent focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm transition-all min-w-0">
+          <Lock size={12} className="text-green-600 shrink-0" />
           <input
             type="text"
             value={url}
-            readOnly
-            className="bg-transparent w-full outline-none font-mono text-gray-700"
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && navigate(url)}
+            className="bg-transparent w-full outline-none font-sans text-gray-700 truncate"
+            spellCheck="false"
           />
+          {url && (
+            <X
+              size={12}
+              className="text-gray-400 cursor-pointer hover:text-gray-600"
+              onClick={() => setUrl("")}
+            />
+          )}
         </div>
 
-        {/* Home Button */}
         <Home
           size={20}
-          className="text-gray-500 cursor-pointer hover:text-blue-500 transition-colors mr-1"
-          onClick={() => navigate("https://corpnet.internal/home")}
+          className="text-gray-400 cursor-pointer hover:text-blue-500 transition-colors mr-2 shrink-0"
+          onClick={() => navigate(HOME_URL)}
         />
       </div>
 
-      {/* CONTENT AREA */}
-      <div className="flex-1 overflow-y-auto relative custom-scrollbar">
-        {renderContent()}
+      <div className="flex-1 overflow-y-auto relative custom-scrollbar bg-white">
+        {initialLoad ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs font-bold text-gray-400 tracking-widest animate-pulse">
+                ESTABLISHING UPLINK...
+              </span>
+            </div>
+          </div>
+        ) : (
+          renderContent()
+        )}
       </div>
     </div>
   );
