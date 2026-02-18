@@ -1,17 +1,17 @@
 import { useState } from "react";
+import { useFlag } from "../../hooks/useFlag";
 
 export default function Level05() {
   const [revealed, setRevealed] = useState(false);
+  const flag = useFlag("level-05");
 
   // CRITICAL: This throws the error when the state changes
   if (revealed) {
-    // This string will be visible in the Console and on the Crash Screen
-    // It survives production minification!
-    throw new Error("CRITICAL_FAILURE: flag{z_index_hides_all_sins}");
+    throw new Error(`CRITICAL_FAILURE: ${flag}`);
   }
 
   const handleRealClick = () => {
-    setRevealed(true); // This triggers the re-render -> causing the throw above
+    setRevealed(true);
   };
 
   const handleFakeClick = () => {

@@ -9,7 +9,7 @@ import { level07Commands } from "../components/puzzles/Level07";
 import { level08Commands } from "../components/puzzles/Level08";
 
 export const PUZZLE_CONFIG = [
-  // --- BROWSER PUZZLES (Levels 1-6) ---
+  // --- BROWSER PUZZLES ---
   {
     id: "level-01",
     type: "browser",
@@ -17,6 +17,8 @@ export const PUZZLE_CONFIG = [
     desc: "HTML Source Code Inspection",
     url: "https://corpnet.internal/dev-notes",
     component: Level01,
+    encryptedFlag:
+      "666c61677b68746d6c5f636f6d6d656e74735f6172655f6e6f745f7365637572657d",
     requires: null,
     color: "bg-blue-100 text-blue-800",
   },
@@ -27,6 +29,7 @@ export const PUZZLE_CONFIG = [
     desc: "Contrast & Selection Tests",
     url: "https://corpnet.internal/design-v2",
     component: Level02,
+    encryptedFlag: "666c61677b636f6e74726173745f69735f6b65797d",
     requires: "level-01",
     color: "bg-purple-100 text-purple-800",
   },
@@ -37,6 +40,7 @@ export const PUZZLE_CONFIG = [
     desc: "Console Debugging",
     url: "https://corpnet.internal/logs",
     component: Level03,
+    encryptedFlag: "666c61677b636f6e736f6c655f6c6f675f6d61737465727d",
     requires: "level-02",
     color: "bg-red-100 text-red-800",
   },
@@ -47,6 +51,8 @@ export const PUZZLE_CONFIG = [
     desc: "Encoding Analysis",
     url: "https://corpnet.internal/secure-transmission",
     component: Level04,
+    encryptedFlag:
+      "666c61677b6261736536345f69735f6e6f745f656e6372797074696f6e7d",
     requires: "level-03",
     color: "bg-orange-100 text-orange-800",
   },
@@ -57,6 +63,7 @@ export const PUZZLE_CONFIG = [
     desc: "CSS Layer Analysis",
     url: "https://corpnet.internal/ads",
     component: Level05,
+    encryptedFlag: "666c61677b7a5f696e6465785f68696465735f616c6c5f73696e737d",
     requires: "level-04",
     color: "bg-yellow-100 text-yellow-800",
   },
@@ -67,6 +74,7 @@ export const PUZZLE_CONFIG = [
     desc: "Storage Inspection",
     url: "https://corpnet.internal/auth",
     component: Level06,
+    encryptedFlag: "666c61677b636f6f6b6965735f6172655f74617374797d",
     requires: "level-05",
     color: "bg-green-100 text-green-800",
   },

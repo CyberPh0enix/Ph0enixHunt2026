@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import { FILE_SYSTEM, FILE_CONTENTS } from "./filesystem";
+import { encodeSecret } from "../utils/crypto";
 
 const resolvePath = (current, target) => {
   if (target === "/") return "/";
@@ -148,6 +149,23 @@ export const SYSTEM_COMMANDS = {
       } catch (err) {
         addToHistory("error", `SYSTEM ERROR: ${err.message}`);
       }
+    },
+  },
+
+  dev_encode: {
+    description: "Encode string to Hex",
+    execute: (args, { addToHistory }) => {
+      if (args.length < 2) {
+        addToHistory("error", "Usage: dev_encode <string>");
+        return;
+      }
+      // Rejoin args in case flag has spaces
+      const text = args.slice(1).join(" ");
+      const hex = encodeSecret(text);
+
+      addToHistory("success", "ENCODED OUTPUT:");
+      addToHistory("user", hex);
+      addToHistory("info", "(Add this to 'encryptedFlag')");
     },
   },
 };

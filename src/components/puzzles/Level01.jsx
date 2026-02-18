@@ -1,19 +1,20 @@
 import { useRef, useEffect } from "react";
+import { useFlag } from "../../hooks/useFlag";
 
 export default function Level01() {
   const containerRef = useRef(null);
+  const flag = useFlag("level-01");
+
   useEffect(() => {
     if (containerRef.current) {
-      const comment = document.createComment(
-        " SECRET FLAG: flag{html_comments_are_not_secure} ",
-      );
+      const comment = document.createComment(` SECRET FLAG: ${flag} `);
       containerRef.current.appendChild(comment);
     }
-  }, []);
+  }, [flag]);
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4 text-blue-600">Dev Team Notes</h1>
+      {/* ... UI remains the same ... */}
       <div className="bg-yellow-100 p-4 border-l-4 border-yellow-500 text-yellow-700">
         <p className="font-bold">Maintenance Note:</p>
         <p ref={containerRef}>

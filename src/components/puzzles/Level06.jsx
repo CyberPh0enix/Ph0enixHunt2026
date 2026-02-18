@@ -1,10 +1,14 @@
 import { useEffect } from "react";
+import { useFlag } from "../../hooks/useFlag";
 
 export default function Level06() {
+  const flag = useFlag("level-06");
+
   useEffect(() => {
-    // This sets a real cookie in their browser
-    document.cookie = "session_id=flag{cookies_are_tasty}; path=/";
-  }, []);
+    if (flag && flag !== "ERROR_MISSING_FLAG") {
+      document.cookie = `session_id=${flag}; path=/`;
+    }
+  }, [flag]);
 
   return (
     <div className="p-10 text-center">
@@ -16,7 +20,7 @@ export default function Level06() {
         Error: 403 Forbidden
       </div>
       <p className="mt-8 text-sm text-gray-500">
-        (Hint: Check your Storage/Cookies in DevTools)
+        (Hint: Check your snacks in DevTools)
       </p>
     </div>
   );
