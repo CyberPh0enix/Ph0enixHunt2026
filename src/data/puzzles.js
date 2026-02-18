@@ -6,6 +6,7 @@ import Level05 from "../components/puzzles/Level05";
 import Level06 from "../components/puzzles/Level06";
 
 import { level07Commands } from "../components/puzzles/Level07";
+import { level08Commands } from "../components/puzzles/Level08";
 
 export const PUZZLE_CONFIG = [
   // --- BROWSER PUZZLES (Levels 1-6) ---
@@ -77,9 +78,22 @@ export const PUZZLE_CONFIG = [
     title: "Hidden Services",
     desc: "Network Port Analysis",
     commands: level07Commands,
+    onStart: "Suspicious activity detected on network.",
     flagHash:
       "ef73643c56c4e933fb2ce904efc1d4569a93b2eecae9be4748ec4bdc91c4d334",
     requires: "level-06",
     color: "bg-neutral-800 text-green-500",
+  },
+  {
+    id: "level-08",
+    type: "terminal",
+    title: "Data Recovery",
+    desc: "File System Forensics",
+    commands: level08Commands,
+    onStart: "Logs are meant to be grep-ed. Investigate.",
+    flagHash:
+      "e2037733748bdc33e66dddc8140dcd6ca264fcbb97670f29bab21e3b5a726299",
+    requires: "level-07",
+    color: "bg-blue-900 text-blue-300",
   },
 ];
