@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { SYSTEM_DATA } from "../../config/build.prop";
 
 export default class SystemCrash extends Component {
   constructor(props) {
@@ -20,8 +21,8 @@ export default class SystemCrash extends Component {
         <div className="fixed inset-0 bg-black text-white font-mono text-sm p-4 z-[99999] overflow-hidden select-none cursor-none flex flex-col justify-end pb-20">
           <div className="space-y-1 leading-tight opacity-90">
             <p>
-              [ 0.000000] Linux version 6.9.1-hardened (root@ph0enix) (gcc
-              version 12.2.0) #1 SMP PREEMPT_DYNAMIC
+              [ 0.000000] {SYSTEM_DATA.kernel} (root@ph0enix) (gcc version
+              12.2.0) #1 SMP PREEMPT_DYNAMIC
             </p>
             <p>
               [ 0.281920] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating

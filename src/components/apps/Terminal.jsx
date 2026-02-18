@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase"; // Needed for Mission Briefing
+import { SYSTEM_DATA } from "../../config/build.prop";
 import { PUZZLE_CONFIG } from "../../data/puzzles";
 import { SYSTEM_COMMANDS } from "../../data/commands";
 
@@ -36,7 +37,7 @@ export default function Terminal({ onClose }) {
   // MISSION BRIEFING (Run on Startup)
   useEffect(() => {
     async function initTerminal() {
-      // A. Get Solved Levels
+      // Get Solved Levels
       const { data } = await supabase
         .from("solved_puzzles")
         .select("puzzle_id")
@@ -44,14 +45,18 @@ export default function Terminal({ onClose }) {
 
       const solvedIds = data?.map((r) => r.puzzle_id) || [];
 
-      // B. Find Active Level (First Unsolved Terminal Level)
+      // Find Active Level (First Unsolved Terminal Level)
       const activeLevel = PUZZLE_CONFIG.find(
         (p) => p.type === "terminal" && !solvedIds.includes(p.id),
       );
 
-      // C. Build Startup Logs
+      // Build Startup Logs
       const startupLogs = [
-        { type: "system", content: `Ph0enixOS Kernel v1.0.4-release` },
+        {
+          type: "system",
+          content: `${SYSTEM_DATA.osName} Kernel ${SYSTEM_DATA.kernel}`,
+        },
+        { type: "system", content: `Build: ${SYSTEM_DATA.buildNumber}` },
         { type: "system", content: `Connected as: ${user?.email}` },
         { type: "info", content: "----------------------------------------" },
       ];

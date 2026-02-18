@@ -1,11 +1,13 @@
 export const SYSTEM_DATA = {
   osName: "Ph0enixOS",
-  version: "4.0.4-beta (Nightshade)",
+  version: "4.0.4-beta",
+  codename: "Nightshade",
   buildNumber: "20260215.420.69",
   kernel: "Linux 6.9.1-hardened",
+  arch: "x86_64",
   device: "Ph0enix One",
   developer: "Uday",
-  debug_mode: false,
+  website: "https://cyber.ph0enix",
 };
 
 export const WALLPAPER_mVjq =
