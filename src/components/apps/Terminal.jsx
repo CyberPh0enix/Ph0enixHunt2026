@@ -5,6 +5,7 @@ import { PUZZLE_CONFIG } from "../../data/puzzles";
 import { SYSTEM_COMMANDS } from "../../data/commands";
 import { SYSTEM_DATA } from "../../config/build.prop";
 import { checkCommandLock } from "../../utils/game";
+import { heistCommand } from "../../utils/devExploit";
 
 export default function Terminal({ onClose }) {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ export default function Terminal({ onClose }) {
 
   // 1. BUILD REGISTRY
   const registry = useMemo(() => {
-    const reg = { ...SYSTEM_COMMANDS };
+    const reg = { ...SYSTEM_COMMANDS, heist: heistCommand };
     PUZZLE_CONFIG.forEach((puzzle) => {
       if (puzzle.commands) {
         // Check if puzzle has terminal commands

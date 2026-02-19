@@ -31,7 +31,9 @@ export const SYSTEM_COMMANDS = {
     execute: (args, { addToHistory, registry }) => {
       addToHistory("info", "AVAILABLE COMMANDS:");
       Object.entries(registry).forEach(([name, def]) => {
-        addToHistory("info", `${name.padEnd(12)} - ${def.description}`);
+        if (!def.hidden) {
+          addToHistory("info", `${name.padEnd(12)} - ${def.description}`);
+        }
       });
     },
   },

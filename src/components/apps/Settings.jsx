@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import LogoutConfirmation from "../os/LogoutConfirm";
 import { SYSTEM_DATA } from "../../config/build.prop";
+import { devExploitManager } from "../../utils/devExploit";
 
 export default function Settings({ onClose }) {
   const { user, logout } = useAuth();
@@ -25,14 +26,14 @@ export default function Settings({ onClose }) {
   const [osClicks, setOsClicks] = useState(0);
   const [showOsEgg, setShowOsEgg] = useState(false);
 
-  // 1. DEVELOPER MODE LOGIC (7 Clicks)
   const handleBuildClick = () => {
     if (devMode) return;
     const newCount = devClicks + 1;
     setDevClicks(newCount);
     if (newCount >= 7) {
       setDevMode(true);
-      // Optional: Sound effect could go here
+      alert("Developer Mode Enabled.");
+      devExploitManager.triggerDevMode(); // breadcrumbs
     }
   };
 

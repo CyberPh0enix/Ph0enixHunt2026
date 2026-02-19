@@ -25,6 +25,7 @@ import Settings from "../apps/Settings";
 import Leaderboard from "../apps/Leaderboard";
 import MissionControl from "../apps/MissionControl";
 import LogoutConfirmation from "./LogoutConfirm";
+import { useDevExploitSequence } from "../../utils/devExploit";
 
 export default function Desktop() {
   const { user, logout } = useAuth();
@@ -81,6 +82,12 @@ export default function Desktop() {
       component: Settings,
     },
   ];
+
+  useDevExploitSequence(activeApp, () => {
+    alert("ROOT PRIVILEGES GRANTED. COMMAND 'heist' UNLOCKED.");
+    const terminalApp = apps.find((a) => a.id === "terminal");
+    if (terminalApp) setActiveApp(terminalApp);
+  });
 
   return (
     <div
