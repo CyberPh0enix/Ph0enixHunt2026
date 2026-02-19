@@ -13,6 +13,7 @@ import {
   Square,
   Circle,
   Triangle,
+  Target,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -22,6 +23,7 @@ import Messenger from "../apps/Messenger";
 import Browser from "../apps/Browser";
 import Settings from "../apps/Settings";
 import Leaderboard from "../apps/Leaderboard";
+import MissionControl from "../apps/MissionControl";
 import LogoutConfirmation from "./LogoutConfirm";
 
 export default function Desktop() {
@@ -63,6 +65,13 @@ export default function Desktop() {
       icon: Trophy,
       color: "text-yellow-500",
       component: Leaderboard,
+    },
+    {
+      id: "missioncontrol",
+      name: "Mission",
+      icon: Target,
+      color: "text-red-500",
+      component: MissionControl,
     },
     {
       id: "settings",
