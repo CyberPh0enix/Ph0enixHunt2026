@@ -236,8 +236,16 @@ export default function Desktop() {
                   onClick={() => setActiveApp(app)}
                   className="flex flex-col items-center gap-2"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-neutral-900/90 border border-white/10 flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                  <div className="relative w-14 h-14 rounded-2xl bg-neutral-900/90 border border-white/10 flex items-center justify-center shadow-lg active:scale-95 transition-all">
                     <app.icon size={24} className={app.color} />
+
+                    {app.id === "messenger" && unreadCount > 0 && (
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full border-2 border-black flex items-center justify-center animate-bounce">
+                        <span className="text-[10px] font-bold text-white">
+                          {unreadCount}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <span className="text-[10px] tracking-wide opacity-80">
                     {app.name}
