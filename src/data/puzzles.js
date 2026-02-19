@@ -13,6 +13,7 @@ import { level08Commands } from "../components/puzzles/Level08";
 
 // Map IDs to their Code counterpart
 const CODE_MAP = {
+  "level-00": {}, // empty object for tutorial
   "level-01": { component: Level01 },
   "level-02": { component: Level02 },
   "level-03": { component: Level03 },

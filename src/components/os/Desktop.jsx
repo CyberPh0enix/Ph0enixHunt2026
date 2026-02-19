@@ -130,6 +130,14 @@ export default function Desktop() {
                 >
                   <div className="w-14 h-14 rounded-xl bg-black/20 backdrop-blur-sm border border-white/5 flex items-center justify-center shadow-lg group-hover:bg-white/10 transition-all">
                     <app.icon size={28} className={app.color} />
+                    {/* NOTIFICATION BADGE */}
+                    {app.id === "messenger" && unreadCount > 0 && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-black flex items-center justify-center animate-bounce">
+                        <span className="text-[10px] font-bold text-white">
+                          {unreadCount}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <span className="text-[10px] font-medium text-shadow drop-shadow-md truncate w-full text-center">
                     {app.name}
@@ -149,6 +157,14 @@ export default function Desktop() {
               >
                 <div className="p-2 bg-black/20 rounded-lg">
                   <app.icon size={24} className={app.color} />
+                  {/* NOTIFICATION BADGE FOR DOCK */}
+                  {app.id === "messenger" && unreadCount > 0 && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-black flex items-center justify-center">
+                      <span className="text-[8px] font-bold text-white">
+                        {unreadCount}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {activeApp?.id === app.id && (
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>

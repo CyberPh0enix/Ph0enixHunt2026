@@ -1,4 +1,30 @@
 export const LEVEL_CONFIG = [
+  // --- TUTORIAL ---
+  {
+    id: "level-00",
+    type: "terminal",
+    title: "First Blood",
+    desc: "Terminal Uplink Initialization",
+    requires: null, // First level has no requirements
+    color: "bg-neutral-800 text-green-500",
+    onStart: "Awaiting manual override code.",
+    encryptedFlag: "666c61677b77656c636f6d655f746f5f706830656e69787d",
+    hints: [
+      {
+        id: "h0-1",
+        delay: 5,
+        sender: "GLITCH",
+        text: "Candidate, I've secured a connection. Let's make sure your terminal works. Open the Terminal app and type exactly this: submit flag{welcome_to_ph0enix}",
+      },
+      {
+        id: "h0-2",
+        delay: 30,
+        sender: "SYSTEM",
+        text: "WARNING: Terminal idle. Awaiting 'submit' command.",
+      },
+    ],
+  },
+
   // --- BROWSER LEVELS ---
   {
     id: "level-01",

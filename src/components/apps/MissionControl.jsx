@@ -19,6 +19,12 @@ export default function MissionControl({ onClose }) {
 
   // Define the 15-Level Blueprint
   const LEVEL_MAP = [
+    {
+      id: "level-00",
+      title: "First Blood",
+      phase: "0. TUTORIAL",
+      icon: Terminal,
+    },
     { id: "level-01", title: "Dev Notes", phase: "I. WEB", icon: Globe },
     { id: "level-02", title: "Design V2", phase: "I. WEB", icon: Globe },
     { id: "level-03", title: "System Logs", phase: "I. WEB", icon: Globe },
