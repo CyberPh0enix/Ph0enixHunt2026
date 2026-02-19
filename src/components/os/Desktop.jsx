@@ -6,6 +6,7 @@ import { SYSTEM_DATA, WALLPAPER_mVjq } from "../../config/build.prop";
 import {
   Terminal as TerminalIcon,
   MessageSquare,
+  Image,
   Globe,
   Settings as SettingsIcon,
   Trophy,
@@ -22,6 +23,7 @@ import { useToast } from "../../context/ToastContext";
 // Apps
 import Terminal from "../apps/Terminal";
 import Messenger from "../apps/Messenger";
+import Gallery from "../apps/Gallery";
 import Browser from "../apps/Browser";
 import Settings from "../apps/Settings";
 import Leaderboard from "../apps/Leaderboard";
@@ -82,6 +84,13 @@ export default function Desktop() {
       component: (props) => (
         <Messenger {...props} messages={messages} markAsRead={markAsRead} />
       ),
+    },
+    {
+      id: "gallery",
+      name: "Gallery",
+      icon: Image,
+      color: "text-yellow-400",
+      component: Gallery,
     },
     {
       id: "leaderboard",

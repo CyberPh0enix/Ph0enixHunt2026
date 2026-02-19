@@ -26,6 +26,7 @@ const CODE_MAP = {
   "level-08": { commands: level08Commands },
   "level-09": { commands: level09Commands },
   "level-10": { commands: level10Commands },
+  "level-11": {},
 };
 
 // Merge them automatically

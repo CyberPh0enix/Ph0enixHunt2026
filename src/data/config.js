@@ -318,4 +318,36 @@ export const LEVEL_CONFIG = [
       },
     ],
   },
+  // --- OTHERS ---
+  {
+    id: "level-11",
+    type: "osint",
+    title: "Digital Footprint",
+    desc: "EXIF Metadata Extraction",
+    requires: "level-10",
+    color: "bg-yellow-900 text-yellow-400",
+    onStart: "Incoming file transfer detected.",
+    encryptedFlag:
+      "666c61677b657869665f646174615f6c65616b735f6c6f636174696f6e7d",
+    hints: [
+      {
+        id: "h11-1",
+        delay: 15,
+        sender: "GLITCH",
+        text: "We need to find where the rogue admin is hiding. I've intercepted a photo they took of a server rack.",
+      },
+      {
+        id: "h11-2",
+        delay: 60,
+        sender: "SYSTEM",
+        text: "ANALYSIS: Image contains some coded info.",
+      },
+      {
+        id: "h11-3",
+        delay: 130,
+        sender: "UNKNOWN",
+        text: "People always forget that Photos contain data, find the info/data string.",
+      },
+    ],
+  },
 ];
