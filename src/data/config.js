@@ -350,4 +350,34 @@ export const LEVEL_CONFIG = [
       },
     ],
   },
+  {
+    id: "level-12",
+    type: "osint",
+    title: "Visual Forensics",
+    desc: "Steganography & Filtering",
+    requires: "level-11",
+    color: "bg-red-900 text-red-400",
+    onStart: "Target location identified. Accessing CCTV...",
+    encryptedFlag: "666c61677b6e696768745f766973696f6e5f6163746976617465647d",
+    hints: [
+      {
+        id: "h12-1",
+        delay: 15,
+        sender: "GLITCH",
+        text: "The GPS coordinates matched a server facility. I've routed their internal cameras.",
+      },
+      {
+        id: "h12-2",
+        delay: 60,
+        sender: "SYSTEM",
+        text: "WARNING: Extremely low contrast detected on physical objects in Camera 01 viewport.",
+      },
+      {
+        id: "h12-3",
+        delay: 150,
+        sender: "UNKNOWN",
+        text: "Sometimes what is hidden in the dark can only be seen when you change your perspective. Use the optics filters on the camera feed.",
+      },
+    ],
+  },
 ];

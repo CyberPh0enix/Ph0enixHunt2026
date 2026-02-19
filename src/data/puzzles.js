@@ -13,6 +13,8 @@ import { level08Commands } from "../components/puzzles/Level08";
 import { level09Commands } from "../components/puzzles/Level09";
 import { level10Commands } from "../components/puzzles/Level10";
 
+import Level12 from "../components/puzzles/Level12";
+
 // Map IDs to their Code counterpart
 const CODE_MAP = {
   "level-00": {}, // empty object for tutorial
@@ -27,6 +29,7 @@ const CODE_MAP = {
   "level-09": { commands: level09Commands },
   "level-10": { commands: level10Commands },
   "level-11": {},
+  "level-12": { component: Level12 },
 };
 
 // Merge them automatically

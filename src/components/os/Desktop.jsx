@@ -7,6 +7,7 @@ import {
   Terminal as TerminalIcon,
   MessageSquare,
   Image,
+  Video,
   Globe,
   Settings as SettingsIcon,
   Trophy,
@@ -24,6 +25,7 @@ import { useToast } from "../../context/ToastContext";
 import Terminal from "../apps/Terminal";
 import Messenger from "../apps/Messenger";
 import Gallery from "../apps/Gallery";
+import Level12App from "../puzzles/Level12";
 import Browser from "../apps/Browser";
 import Settings from "../apps/Settings";
 import Leaderboard from "../apps/Leaderboard";
@@ -91,6 +93,13 @@ export default function Desktop() {
       icon: Image,
       color: "text-yellow-400",
       component: Gallery,
+    },
+    {
+      id: "security",
+      name: "CCTV",
+      icon: Video,
+      color: "text-red-500",
+      component: Level12App,
     },
     {
       id: "leaderboard",
