@@ -72,14 +72,44 @@ export const SYSTEM_COMMANDS = {
   ls: {
     description: "List directory contents",
     execute: (args, { addToHistory, cwd }) => {
-      // Logic to find children of current cwd
-      // Handle "ls /etc" vs just "ls"
-      const targetPath = args[1] ? resolvePath(cwd, args[1]) : cwd;
+      // Parse Flags
+      const flags = args
+        .filter((a) => a.startsWith("-"))
+        .join("")
+        .replace(/-/g, "");
+      const isLong = flags.includes("l");
+      const isAll = flags.includes("a");
+
+      const targetArg = args.find((a) => a !== "ls" && !a.startsWith("-"));
+      const targetPath = targetArg ? resolvePath(cwd, targetArg) : cwd;
+
       const dir = FILE_SYSTEM[targetPath];
 
       if (dir && dir.type === "dir") {
-        // Format output neatly (columns or just space separated)
-        addToHistory("user", dir.children.join("  "));
+        let items = dir.children.filter(
+          (child) => isAll || !child.startsWith("."),
+        );
+
+        if (isLong) {
+          addToHistory("system", `total ${items.length * 4}`);
+          items.forEach((child) => {
+            const childPath =
+              targetPath === "/" ? `/${child}` : `${targetPath}/${child}`;
+            const meta = FILE_SYSTEM[childPath];
+            if (meta) {
+              const size = meta.size || 4096;
+              const sizeStr = size.toString().padStart(5, " ");
+              addToHistory(
+                "info",
+                `${meta.perms} 1 ${meta.owner.padEnd(4, " ")} ${meta.owner.padEnd(4, " ")} ${sizeStr} ${meta.date} ${child}`,
+              );
+            }
+          });
+        } else {
+          addToHistory("user", items.join("  "));
+        }
+      } else if (dir && dir.type === "file") {
+        addToHistory("user", targetArg); // Just print the file name if they ls a file
       } else {
         addToHistory(
           "error",
@@ -102,25 +132,61 @@ export const SYSTEM_COMMANDS = {
       }
     },
   },
-
   cat: {
     description: "Concatenate and display file content",
     execute: (args, { addToHistory, cwd }) => {
-      if (!args[1]) {
-        addToHistory("error", "Usage: cat <filename>");
-        return;
-      }
+      if (!args[1]) return addToHistory("error", "Usage: cat <filename>");
       const target = resolvePath(cwd, args[1]);
+      const meta = FILE_SYSTEM[target];
 
-      if (FILE_CONTENTS[target]) {
-        // Display content (handles newlines)
-        FILE_CONTENTS[target].split("\n").forEach((line) => {
-          addToHistory("user", line);
-        });
-      } else if (FILE_SYSTEM[target] && FILE_SYSTEM[target].type === "dir") {
+      if (meta && meta.type === "file") {
+        const content = FILE_CONTENTS[target];
+        // The safety block is removed. If they cat a binary, they get the raw garbage!
+        content.split("\n").forEach((line) => addToHistory("info", line));
+      } else if (meta && meta.type === "dir") {
         addToHistory("error", `cat: ${args[1]}: Is a directory`);
       } else {
         addToHistory("error", `cat: ${args[1]}: No such file or directory`);
+      }
+    },
+  },
+
+  chmod: {
+    description: "Change file mode bits (permissions)",
+    execute: (args, { addToHistory, cwd }) => {
+      if (args.length < 3) {
+        addToHistory("error", "Usage: chmod <permissions> <filename>");
+        return;
+      }
+
+      const perms = args[1];
+      const filename = args[2];
+      const target = resolvePath(cwd, filename);
+      const meta = FILE_SYSTEM[target];
+
+      if (meta) {
+        if (meta.type === "dir") {
+          addToHistory(
+            "error",
+            `chmod: changing permissions of '${filename}': Operation not permitted`,
+          );
+          return;
+        }
+
+        if (perms === "+x") {
+          // Flip the execute bits: -rw-r--r-- -> -rwxr-xr-x
+          meta.perms = meta.perms.replace(/-/g, (match, offset) =>
+            offset === 3 || offset === 6 || offset === 9 ? "x" : match,
+          );
+        } else {
+          // Simplified fallback for numeric or other mods for now
+          addToHistory("system", `Permissions updated for ${filename}`);
+        }
+      } else {
+        addToHistory(
+          "error",
+          `chmod: cannot access '${filename}': No such file or directory`,
+        );
       }
     },
   },
@@ -204,7 +270,7 @@ export const SYSTEM_COMMANDS = {
     },
   },
 
-  dev_encode: {
+  encode: {
     description: "Encode string to Hex",
     execute: (args, { addToHistory }) => {
       if (args.length < 2) {

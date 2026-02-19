@@ -1,33 +1,27 @@
-import { FILE_SYSTEM, FILE_CONTENTS } from "../../data/filesystem";
+import {
+  FILE_SYSTEM,
+  FILE_CONTENTS,
+  createDir,
+  createFile,
+} from "../../data/filesystem";
 import { getLevelFlag } from "../../utils/game";
 
 const RAW_FLAG = getLevelFlag("level-08");
 
-// Generate a mathematically perfect, uniform hex dump
-const generateHexDump = (flagStr) => {
-  const bytesPerLine = 48; // Wide format ensures the flag fits on a single line
+// Hex dump
+const generateSafeHexDump = () => {
+  const bytesPerLine = 48;
   const totalLines = 30;
   const totalBytes = bytesPerLine * totalLines;
   const buffer = new Uint8Array(totalBytes);
 
-  // 1. Fill the buffer with realistic memory noise
   for (let i = 0; i < totalBytes; i++) {
-    // 60% chance of non-printable chars (dots), 40% chance of random ASCII noise
     const isPrintable = Math.random() > 0.6;
     buffer[i] = isPrintable
       ? 33 + Math.floor(Math.random() * 93)
       : Math.floor(Math.random() * 256);
   }
 
-  // 2. Inject the flag seamlessly into the byte array
-  const injectLine = 15; // Put it right in the middle
-  const injectStart = injectLine * bytesPerLine + 5; // Offset it slightly from the start of the line
-
-  for (let i = 0; i < flagStr.length; i++) {
-    buffer[injectStart + i] = flagStr.charCodeAt(i);
-  }
-
-  // 3. Format the buffer into strict, fixed-width rows
   let dump = "";
   for (let i = 0; i < totalLines; i++) {
     const address = `0x${(8048000 + i * bytesPerLine).toString(16).toUpperCase().padStart(8, "0")}`;
@@ -36,45 +30,85 @@ const generateHexDump = (flagStr) => {
 
     for (let j = 0; j < bytesPerLine; j++) {
       const b = buffer[i * bytesPerLine + j];
-
-      // Pad hex to 2 chars (e.g., 'A' -> '0A')
       hexPart += b.toString(16).padStart(2, "0").toUpperCase() + " ";
-
-      // Render ASCII if printable, otherwise render a dot
       asciiPart += b >= 32 && b <= 126 ? String.fromCharCode(b) : ".";
     }
-
     dump += `${address}  ${hexPart} |${asciiPart}|\n`;
   }
-
   return dump;
 };
 
 const injectLevelData = () => {
-  const crashDir = "/var/crash";
-  const logPath = "/var/log/kern.log";
-  const secretFile = "core.sys.1092.dmp";
+  if (!FILE_SYSTEM["/var/crash"]) {
+    createDir("/var/crash", "root", "drwxr-xr-x");
 
-  if (!FILE_SYSTEM[crashDir]) {
-    FILE_SYSTEM["/var"].children.push("crash");
-    FILE_SYSTEM[crashDir] = { type: "dir", children: [secretFile] };
+    createFile(
+      "/var/crash/core.sys.1092.dmp",
+      `[BINARY_DATA_CORRUPTION_PREVENTION]\n${generateSafeHexDump()}`,
+      "root",
+      "-rw-r--r--",
+    );
 
-    // Inject the perfectly formatted binary dump
-    FILE_CONTENTS[`${crashDir}/${secretFile}`] =
-      `[BINARY_DATA_CORRUPTION_PREVENTION]\n${generateHexDump(RAW_FLAG)}`;
+    createFile(
+      "/var/crash/core.sys.0841.dmp",
+      `[BINARY_DATA_CORRUPTION_PREVENTION]\n${generateSafeHexDump()}`,
+      "root",
+      "-rw-r--r--",
+    );
+    createFile(
+      "/var/crash/core.sys.2044.dmp",
+      `[BINARY_DATA_CORRUPTION_PREVENTION]\n0x7F454C460201010000... Segfault at 0x0000000000000000`,
+      "root",
+      "-rw-r--r--",
+    );
+    createFile(
+      "/var/crash/crash_report.txt",
+      "Analysis: secure_vault segfaulted due to an unchecked buffer. Core dumped to process 1092.\nNote: Other memory dumps in this directory are from legacy systems and contain junk data.",
+      "root",
+      "-rw-r--r--",
+    );
   }
 
-  const hintLog = `\nFeb 17 11:22:14 ph0enix kernel: [ 4123.456] traps: secure_vault[1092] general protection fault ip:7f8b9c sp:7ffe3e error:0 in libc.so.6\nFeb 17 11:22:15 ph0enix systemd-coredump[1093]: Process 1092 (secure_vault) dumped core.\nFeb 17 11:22:15 ph0enix systemd-coredump[1093]: Core file saved to /var/crash/core.sys.1092.dmp`;
+  const hintLog = `\nFeb 19 11:22:14 ph0enix kernel: [ 4123.456] traps: secure_vault[1092] general protection fault\nFeb 19 11:22:15 ph0enix systemd-coredump[1093]: Process 1092 (secure_vault) dumped core.\nFeb 19 11:22:15 ph0enix systemd-coredump[1093]: Core file saved to /var/crash/core.sys.1092.dmp`;
 
   if (
-    FILE_CONTENTS[logPath] &&
-    !FILE_CONTENTS[logPath].includes("dumped core")
+    FILE_CONTENTS["/var/log/kern.log"] &&
+    !FILE_CONTENTS["/var/log/kern.log"].includes("dumped core")
   ) {
-    FILE_CONTENTS[logPath] += hintLog;
+    FILE_CONTENTS["/var/log/kern.log"] += hintLog;
   }
 };
 
 injectLevelData();
+
+// 2. The Dynamic Generator: Builds the flag line on-the-fly when grepped
+const generateDynamicFlagLine = (pattern) => {
+  const bytesPerLine = 48;
+  const buffer = new Uint8Array(bytesPerLine);
+  for (let i = 0; i < bytesPerLine; i++) {
+    buffer[i] =
+      Math.random() > 0.6
+        ? 33 + Math.floor(Math.random() * 93)
+        : Math.floor(Math.random() * 256);
+  }
+
+  const injectStart = 5;
+  for (let i = 0; i < RAW_FLAG.length; i++) {
+    buffer[injectStart + i] = RAW_FLAG.charCodeAt(i);
+  }
+
+  let hexPart = "";
+  let asciiPart = "";
+  for (let j = 0; j < bytesPerLine; j++) {
+    const b = buffer[j];
+    hexPart += b.toString(16).padStart(2, "0").toUpperCase() + " ";
+    asciiPart += b >= 32 && b <= 126 ? String.fromCharCode(b) : ".";
+  }
+
+  const address = "0x080482D0";
+  const rawLine = `${address}  ${hexPart} |${asciiPart}|`;
+  return rawLine.replace(new RegExp(`(${pattern})`, "gi"), `>>$1<<`);
+};
 
 export const level08Commands = {
   grep: {
@@ -87,15 +121,23 @@ export const level08Commands = {
 
       const pattern = args[1];
       const filename = args[2];
-
       const fullPath = filename.startsWith("/")
         ? filename
         : cwd === "/"
           ? `/${filename}`
           : `${cwd}/${filename}`;
 
-      const content = FILE_CONTENTS[fullPath];
+      // THE BULLETPROOF INTERCEPTOR
+      if (
+        fullPath === "/var/crash/core.sys.1092.dmp" &&
+        (pattern.toLowerCase() === "flag" || RAW_FLAG.includes(pattern))
+      ) {
+        addToHistory("success", generateDynamicFlagLine(pattern));
+        return;
+      }
 
+      // Standard grep fallback for normal files
+      const content = FILE_CONTENTS[fullPath];
       if (!content) {
         if (FILE_SYSTEM[fullPath]) {
           addToHistory("error", `grep: ${filename}: Is a directory`);
@@ -111,8 +153,6 @@ export const level08Commands = {
       if (matches.length > 0) {
         matches.forEach((match) => {
           if (match.includes("[BINARY_DATA")) return;
-
-          // Highlights the matched word
           const highlightedMatch = match.replace(
             new RegExp(`(${pattern})`, "g"),
             `>>$1<<`,

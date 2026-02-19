@@ -255,4 +255,35 @@ export const LEVEL_CONFIG = [
       },
     ],
   },
+  {
+    id: "level-09",
+    type: "terminal",
+    title: "Weaponization",
+    desc: "File Permissions",
+    requires: "level-08",
+    color: "bg-red-900 text-red-400",
+    terminalCommands: ["chmod"],
+    onStart: "Dormant payload located in /root. Arm it.",
+    encryptedFlag: "666c61677b63686d6f645f706f7765727d",
+    hints: [
+      {
+        id: "h9-1",
+        delay: 15,
+        sender: "GLITCH",
+        text: "We found the exploit binary inside the `/` directory. `./exploit.bin`",
+      },
+      {
+        id: "h9-2",
+        delay: 60,
+        sender: "SYSTEM",
+        text: "BASH ERROR: ./exploit.bin execution prevented. Missing 'x' flag in POSIX permissions.",
+      },
+      {
+        id: "h9-3",
+        delay: 140,
+        sender: "UNKNOWN",
+        text: "The system locked the file, use `+x` arg for execution bit.",
+      },
+    ],
+  },
 ];
