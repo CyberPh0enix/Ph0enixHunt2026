@@ -15,6 +15,8 @@ import {
   X,
 } from "lucide-react";
 
+import DarkMarket from "./DarkMarket";
+
 // --- ERROR COMPONENTS ---
 
 const Error403 = ({ url }) => (
@@ -173,8 +175,14 @@ export default function Browser({ onClose }) {
   }, [user]);
 
   const navigate = (input) => {
-    let target = input;
-    if (input.startsWith("/")) {
+    let target = input.toLowerCase().trim(); // Normalize input
+    if (
+      target.includes(".onion") ||
+      target.includes("tor://") ||
+      target === "market"
+    ) {
+      target = "tor://market.onion";
+    } else if (input.startsWith("/")) {
       target = `${BASE_URL}${input}`;
     } else if (!input.startsWith("http") && !input.startsWith("https")) {
       target = `https://${input}`;
@@ -192,6 +200,9 @@ export default function Browser({ onClose }) {
   const browserPuzzles = PUZZLE_CONFIG.filter((p) => p.type === "browser");
 
   const renderContent = () => {
+    if (url === "tor://market.onion") {
+      return <DarkMarket />;
+    }
     if (url === HOME_URL || url === BASE_URL || url === `${BASE_URL}/`) {
       return (
         <IntranetHome onNavigate={navigate} browserPuzzles={browserPuzzles} />
@@ -251,20 +262,33 @@ export default function Browser({ onClose }) {
           </button>
         </div>
 
-        <div className="flex-1 bg-gray-100 rounded-full px-4 py-1.5 text-xs sm:text-sm text-gray-600 flex items-center gap-2 border border-transparent focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm transition-all min-w-0">
-          <Lock size={12} className="text-green-600 shrink-0" />
+        {/* DYNAMIC URL BAR: Red for Tor, Blue for Intranet */}
+        <div
+          className={`flex-1 rounded-full px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 border transition-all min-w-0
+            ${
+              url === "tor://market.onion"
+                ? "bg-red-950/20 border-red-900/50 text-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_10px_rgba(255,0,0,0.2)]"
+                : "bg-gray-100 border-transparent text-gray-600 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm"
+            }`}
+        >
+          {url === "tor://market.onion" ? (
+            <ShieldAlert size={12} className="text-red-600 shrink-0" />
+          ) : (
+            <Lock size={12} className="text-green-600 shrink-0" />
+          )}
+
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && navigate(url)}
-            className="bg-transparent w-full outline-none font-sans text-gray-700 truncate"
+            className={`bg-transparent w-full outline-none truncate ${url === "tor://market.onion" ? "text-red-500 font-mono" : "font-sans text-gray-700"}`}
             spellCheck="false"
           />
           {url && (
             <X
               size={12}
-              className="text-gray-400 cursor-pointer hover:text-gray-600"
+              className={`${url === "tor://market.onion" ? "text-red-900 hover:text-red-500" : "text-gray-400 hover:text-gray-600"} cursor-pointer`}
               onClick={() => setUrl("")}
             />
           )}
