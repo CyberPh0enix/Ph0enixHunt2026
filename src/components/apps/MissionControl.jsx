@@ -1,65 +1,44 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import {
-  Shield,
   Target,
   Lock,
   Unlock,
-  Zap,
-  Database,
-  Terminal,
+  FastForward,
   Globe,
+  Terminal,
+  Zap,
+  Shield,
+  CheckCircle2,
 } from "lucide-react";
+import { LEVEL_CONFIG } from "../../data/config";
 
-// ADDED PROPS HERE
-export default function MissionControl({ onClose, solvedIds }) {
+// Dynamic Icon Assign
+const getIconForType = (type) => {
+  switch (type?.toLowerCase()) {
+    case "browser":
+      return Globe;
+    case "terminal":
+      return Terminal;
+    case "osint":
+      return Zap;
+    default:
+      return Shield;
+  }
+};
+
+export default function MissionControl({
+  onClose,
+  solvedIds = [],
+  skippedIds = [],
+  progressionIds = [],
+}) {
   const { user, profile, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
 
-  const LEVEL_MAP = [
-    {
-      id: "level-00",
-      title: "First Blood",
-      phase: "0. TUTORIAL",
-      icon: Terminal,
-    },
-    { id: "level-01", title: "Dev Notes", phase: "I. WEB", icon: Globe },
-    { id: "level-02", title: "Design V2", phase: "I. WEB", icon: Globe },
-    { id: "level-03", title: "System Logs", phase: "I. WEB", icon: Globe },
-    { id: "level-04", title: "Transmission", phase: "I. WEB", icon: Globe },
-    { id: "level-05", title: "Corrupted", phase: "I. WEB", icon: Globe },
-    { id: "level-06", title: "Session", phase: "II. INTERNAL", icon: Database },
-    {
-      id: "level-07",
-      title: "Hidden Port",
-      phase: "II. INTERNAL",
-      icon: Terminal,
-    },
-    {
-      id: "level-08",
-      title: "Data Recovery",
-      phase: "II. INTERNAL",
-      icon: Terminal,
-    },
-    {
-      id: "level-09",
-      title: "Log Poison",
-      phase: "II. INTERNAL",
-      icon: Database,
-    },
-    { id: "level-10", title: "Privilege", phase: "II. INTERNAL", icon: Shield },
-    { id: "level-11", title: "Injection", phase: "III. APT", icon: Zap },
-    { id: "level-12", title: "Forgery", phase: "III. APT", icon: Zap },
-    { id: "level-13", title: "Reverse Eng.", phase: "III. APT", icon: Zap },
-    { id: "level-14", title: "The Matrix", phase: "ENDGAME", icon: Target },
-    { id: "level-15", title: "Root", phase: "ENDGAME", icon: Shield },
-  ];
-
   useEffect(() => {
     async function loadProfile() {
-      if (user) {
-        await refreshProfile(user.id);
-      }
+      if (user) await refreshProfile(user.id);
       setLoading(false);
     }
     loadProfile();
@@ -106,45 +85,71 @@ export default function MissionControl({ onClose, solvedIds }) {
             <h3 className="text-sm font-bold text-neutral-500 mb-6 border-b border-neutral-800 pb-2">
               SYSTEM BREACH PROGRESSION
             </h3>
-
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              {LEVEL_MAP.map((level, idx) => {
+              {LEVEL_CONFIG.map((level, idx) => {
                 const isSolved = solvedIds.includes(level.id);
-                const previousLevelId = idx > 0 ? LEVEL_MAP[idx - 1].id : null;
-                const isNext =
-                  !isSolved &&
-                  (previousLevelId === null ||
-                    solvedIds.includes(previousLevelId));
+                const isSkipped = skippedIds.includes(level.id);
+                const isUnlocked =
+                  !level.requires || progressionIds.includes(level.requires);
 
+                const isActive = isUnlocked && !isSolved && !isSkipped;
+                const isSolvedPostBypass = isSolved && isSkipped; // The stubborn player state
+
+                // Smart State Styling
                 let stateClasses =
                   "bg-neutral-900 border-neutral-800 text-neutral-600 opacity-50";
-                if (isSolved)
+
+                if (isSolvedPostBypass) {
+                  // Golden yellow for solving a skipped level
+                  stateClasses =
+                    "bg-yellow-950/20 border-yellow-600 text-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.15)]";
+                } else if (isSolved) {
                   stateClasses =
                     "bg-green-950/30 border-green-600 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]";
-                if (isNext)
+                } else if (isSkipped) {
+                  stateClasses = "bg-red-950/20 border-red-900 text-red-500";
+                } else if (isActive) {
                   stateClasses =
-                    "bg-yellow-950/20 border-yellow-500 text-yellow-500 animate-pulse shadow-[0_0_10px_rgba(234,179,8,0.4)]";
+                    "bg-blue-950/20 border-blue-500 text-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.4)]";
+                }
+
+                const TypeIcon = getIconForType(level.type);
 
                 return (
                   <div
                     key={level.id}
                     className={`relative flex flex-col p-3 rounded-xl border-2 transition-all ${stateClasses}`}
                   >
-                    <div className="text-[9px] mb-2 opacity-70 font-bold">
-                      {level.phase}
+                    <div className="text-[9px] mb-2 opacity-70 font-bold uppercase">
+                      {level.type || "MISSION"}
                     </div>
+
                     <div className="flex items-center justify-between mb-3">
-                      <level.icon
+                      <TypeIcon
                         size={20}
                         className={
-                          isSolved
-                            ? "text-green-500"
-                            : isNext
-                              ? "text-yellow-500"
-                              : "text-neutral-700"
+                          isSolvedPostBypass
+                            ? "text-yellow-500"
+                            : isSolved
+                              ? "text-green-500"
+                              : isActive
+                                ? "text-blue-500"
+                                : isSkipped
+                                  ? "text-red-500"
+                                  : "text-neutral-700"
                         }
                       />
-                      {isSolved ? <Unlock size={14} /> : <Lock size={14} />}
+
+                      {/* Top Right Status Badge */}
+                      {isSolvedPostBypass ? (
+                        <CheckCircle2 size={14} className="text-yellow-500" />
+                      ) : isSolved ? (
+                        <Unlock size={14} />
+                      ) : isSkipped ? (
+                        <FastForward size={14} />
+                      ) : (
+                        <Lock size={14} />
+                      )}
                     </div>
                     <div className="mt-auto">
                       <div className="text-[10px] opacity-50">
@@ -153,6 +158,25 @@ export default function MissionControl({ onClose, solvedIds }) {
                       <div className="text-xs font-bold truncate">
                         {level.title}
                       </div>
+
+                      {/* Labels for states */}
+                      {isSolvedPostBypass ? (
+                        <div className="text-[7px] text-yellow-500 font-bold mt-1 tracking-widest uppercase">
+                          SOLVED (POST-BYPASS)
+                        </div>
+                      ) : isSolved ? (
+                        <div className="text-[7px] text-green-500 font-bold mt-1 tracking-widest uppercase">
+                          COMPLETED
+                        </div>
+                      ) : isSkipped ? (
+                        <div className="text-[8px] text-red-500 font-bold mt-1 tracking-widest uppercase">
+                          BYPASSED
+                        </div>
+                      ) : isActive ? (
+                        <div className="text-[8px] text-blue-500 font-bold mt-1 tracking-widest uppercase animate-pulse">
+                          ACTIVE NODE
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 );

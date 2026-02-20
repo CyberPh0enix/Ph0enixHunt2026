@@ -17,6 +17,7 @@ import {
   Circle,
   Triangle,
   Target,
+  ShoppingCart,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -30,6 +31,7 @@ import Browser from "../apps/Browser";
 import Settings from "../apps/Settings";
 import Leaderboard from "../apps/Leaderboard";
 import MissionControl from "../apps/MissionControl";
+import DarkMarket from "../apps/DarkMarket";
 import LogoutConfirmation from "./LogoutConfirm";
 import { useDevExploitSequence } from "../../utils/devExploit";
 
@@ -39,28 +41,36 @@ export default function Desktop() {
   const [activeApp, setActiveApp] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
 
-  // --- MASTER PROGRESS STATE ---
+  // PROGRESS STATE
   const [solvedIds, setSolvedIds] = useState([]);
+  const [skippedIds, setSkippedIds] = useState([]);
 
-  // Fetch progress immediately when Desktop loads
+  // Combined array for unlocking logic
+  const progressionIds = [...solvedIds, ...skippedIds];
+
+  // Fetch progress securely from Supabase
   useEffect(() => {
     async function fetchProgress() {
       if (user) {
-        const { data } = await supabase
+        // Fetch Solves
+        const { data: solvedData } = await supabase
           .from("solved_puzzles")
           .select("puzzle_id")
           .eq("user_id", user.id);
-        if (data) {
-          setSolvedIds(data.map((r) => r.puzzle_id));
-        }
+        if (solvedData) setSolvedIds(solvedData.map((r) => r.puzzle_id));
+
+        // Fetch Skips
+        const { data: skippedData } = await supabase
+          .from("skipped_puzzles")
+          .select("puzzle_id")
+          .eq("user_id", user.id);
+        if (skippedData) setSkippedIds(skippedData.map((r) => r.puzzle_id));
       }
     }
     fetchProgress();
   }, [user]);
 
-  // Hint system now receives the live, master state
   const { messages, unreadCount, markAsRead } = useHintSystem(solvedIds);
-
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const apps = [
@@ -113,7 +123,29 @@ export default function Desktop() {
       name: "Mission",
       icon: Target,
       color: "text-red-500",
-      component: MissionControl,
+      component: (props) => (
+        <MissionControl
+          {...props}
+          solvedIds={solvedIds}
+          skippedIds={skippedIds}
+          progressionIds={progressionIds}
+        />
+      ),
+    },
+    {
+      id: "darkmarket",
+      name: "Market",
+      icon: ShoppingCart,
+      color: "text-neutral-500",
+      component: (props) => (
+        <DarkMarket
+          {...props}
+          solvedIds={solvedIds}
+          skippedIds={skippedIds}
+          setSkippedIds={setSkippedIds}
+          progressionIds={progressionIds}
+        />
+      ),
     },
     {
       id: "settings",
@@ -141,15 +173,6 @@ export default function Desktop() {
             <div className="flex items-center gap-4 text-xs font-bold tracking-wider">
               <span className="flex items-center gap-1 opacity-80">
                 <Cpu size={14} /> {SYSTEM_DATA.osName}
-              </span>
-              <span className="text-white/50 hover:text-white transition-colors cursor-pointer">
-                File
-              </span>
-              <span className="text-white/50 hover:text-white transition-colors cursor-pointer">
-                Edit
-              </span>
-              <span className="text-white/50 hover:text-white transition-colors cursor-pointer">
-                View
               </span>
             </div>
             <div className="flex items-center gap-4 text-xs">
@@ -220,7 +243,6 @@ export default function Desktop() {
             <button
               onClick={() => setShowLogout(true)}
               className="p-2 hover:bg-red-500/20 rounded-xl group transition-all"
-              title="Logout"
             >
               <LogOut
                 size={24}
@@ -256,7 +278,6 @@ export default function Desktop() {
                 >
                   <div className="relative w-14 h-14 rounded-2xl bg-neutral-900/90 border border-white/10 flex items-center justify-center shadow-lg active:scale-95 transition-all">
                     <app.icon size={24} className={app.color} />
-
                     {app.id === "messenger" && unreadCount > 0 && (
                       <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full border-2 border-black flex items-center justify-center animate-bounce">
                         <span className="text-[10px] font-bold text-white">
@@ -292,7 +313,6 @@ export default function Desktop() {
           </div>
         </>
       )}
-
       {/* Active App Window */}
       {activeApp && (
         <div
@@ -305,11 +325,14 @@ export default function Desktop() {
           }
         `}
         >
-          {/* PASSED STATE DOWN TO ALL APPS */}
+          {/* PASS ALL GLOBAL STATE DOWN TO APPS */}
           <activeApp.component
             onClose={() => setActiveApp(null)}
             solvedIds={solvedIds}
             setSolvedIds={setSolvedIds}
+            skippedIds={skippedIds}
+            setSkippedIds={setSkippedIds}
+            progressionIds={progressionIds}
           />
         </div>
       )}

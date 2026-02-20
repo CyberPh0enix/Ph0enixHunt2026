@@ -46,6 +46,7 @@ export const SYSTEM_COMMANDS = {
   },
 
   whoami: {
+    hidden: true,
     description: "Show current user",
     execute: (args, { addToHistory, user }) => {
       addToHistory("success", `USER: ${user?.email}`);
@@ -54,6 +55,7 @@ export const SYSTEM_COMMANDS = {
   },
 
   panic: {
+    hidden: true,
     description: "Trigger Kernel Panic",
     execute: (args, { addToHistory, setCrash }) => {
       addToHistory("system", "Initiating kernel dump...");
@@ -193,8 +195,18 @@ export const SYSTEM_COMMANDS = {
 
   submit: {
     description: "Submit a flag",
-    // 1. Destructure 'setSolvedIds' here
-    execute: async (args, { addToHistory, user, solvedIds, setSolvedIds }) => {
+    execute: async (
+      args,
+      {
+        addToHistory,
+        user,
+        profile,
+        refreshProfile,
+        solvedIds,
+        setSolvedIds,
+        skippedIds,
+      },
+    ) => {
       if (args.length < 2) {
         addToHistory("error", "Usage: submit <flag_string>");
         return;
@@ -205,7 +217,6 @@ export const SYSTEM_COMMANDS = {
 
       addToHistory("system", "Verifying hash signature...");
 
-      // --- DYNAMIC CHECK START ---
       let matchedLevel = null;
       for (const level of LEVEL_CONFIG) {
         if (level.encryptedFlag) {
@@ -217,7 +228,6 @@ export const SYSTEM_COMMANDS = {
           }
         }
       }
-      // --- DYNAMIC CHECK END ---
 
       if (matchedLevel) {
         if (solvedIds && solvedIds.includes(matchedLevel.id)) {
@@ -240,29 +250,48 @@ export const SYSTEM_COMMANDS = {
           if (error) {
             if (error.code === "23505") {
               addToHistory("success", "You have already solved this level!");
-              // NO RELOAD NEEDED HERE
             } else {
-              console.error("Supabase Error:", error);
               addToHistory("error", `Database Error: ${error.message}`);
             }
           } else {
+            // REWARD CALCULATION
+            const isPostBypass =
+              skippedIds && skippedIds.includes(matchedLevel.id);
+            const rewardCR = isPostBypass ? 25 : 100;
+            const rewardXP = isPostBypass ? 25 : 100;
+
+            if (profile) {
+              const newCredits = (profile.credits || 0) + rewardCR;
+              const newScore = (profile.score || 0) + rewardXP;
+
+              await supabase
+                .from("profiles")
+                .update({ credits: newCredits, score: newScore })
+                .eq("id", user.id);
+              if (refreshProfile) await refreshProfile(user.id);
+            }
+
             addToHistory(
               "success",
               `CORRECT! ${matchedLevel.title} Completed.`,
             );
-            addToHistory("info", "Updating profile clearance...");
 
-            // 2. UPDATE STATE INSTANTLY (No Reload)
-            if (setSolvedIds) {
-              setSolvedIds((prev) => [...prev, matchedLevel.id]);
+            // Show dynamic terminal message based on status
+            if (isPostBypass) {
+              addToHistory(
+                "warning",
+                `PENALTY APPLIED: Partial Reward (+${rewardCR} cR / +${rewardXP} XP) due to prior bypass.`,
+              );
+            } else {
+              addToHistory("info", `REWARD: +${rewardCR} cR / +${rewardXP} XP`);
             }
+
+            if (setSolvedIds)
+              setSolvedIds((prev) => [...prev, matchedLevel.id]);
           }
         } else {
           addToHistory("success", `CORRECT! (Guest Mode)`);
-          // Update local state for guests too so they can keep playing
-          if (setSolvedIds) {
-            setSolvedIds((prev) => [...prev, matchedLevel.id]);
-          }
+          if (setSolvedIds) setSolvedIds((prev) => [...prev, matchedLevel.id]);
         }
       } else {
         addToHistory("error", "INCORRECT. Flag signature mismatch.");
@@ -271,6 +300,7 @@ export const SYSTEM_COMMANDS = {
   },
 
   encode: {
+    hidden: true,
     description: "Encode string to Hex",
     execute: (args, { addToHistory }) => {
       if (args.length < 2) {

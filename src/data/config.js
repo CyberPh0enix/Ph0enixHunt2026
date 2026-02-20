@@ -1,11 +1,10 @@
-export const LEVEL_CONFIG = [
+const LEVEL_CONFIG = [
   // --- TUTORIAL ---
   {
     id: "level-00",
     type: "terminal",
     title: "First Blood",
     desc: "Terminal Uplink Initialization",
-    requires: null, // First level has no requirements
     color: "bg-neutral-800 text-green-500",
     onStart: "Awaiting manual override code.",
     encryptedFlag: "666c61677b77656c636f6d655f746f5f706830656e69787d",
@@ -38,7 +37,6 @@ export const LEVEL_CONFIG = [
     title: "Dev Team Notes",
     desc: "HTML Source Code Inspection",
     path: "dev-notes",
-    requires: null,
     color: "bg-blue-100 text-blue-800",
     encryptedFlag:
       "666c61677b68746d6c5f636f6d6d656e74735f6172655f6e6f745f7365637572657d",
@@ -69,7 +67,6 @@ export const LEVEL_CONFIG = [
     title: "Design System V2",
     desc: "Contrast & Selection Tests",
     path: "design-v2",
-    requires: "level-01",
     color: "bg-purple-100 text-purple-800",
     encryptedFlag: "666c61677b636f6e74726173745f69735f6b65797d",
     hints: [
@@ -93,7 +90,6 @@ export const LEVEL_CONFIG = [
     title: "System Logs",
     desc: "Console Debugging",
     path: "logs",
-    requires: "level-02",
     color: "bg-red-100 text-red-800",
     encryptedFlag: "666c61677b636f6e736f6c655f6c6f675f6d61737465727d",
     hints: [
@@ -117,7 +113,6 @@ export const LEVEL_CONFIG = [
     title: "Secure Transmission",
     desc: "Encoding Analysis",
     path: "secure-transmission",
-    requires: "level-03",
     color: "bg-orange-100 text-orange-800",
     encryptedFlag:
       "666c61677b6261736536345f69735f6e6f745f656e6372797074696f6e7d",
@@ -142,7 +137,6 @@ export const LEVEL_CONFIG = [
     title: "Corrupted Display",
     desc: "CSS Layer Analysis",
     path: "ads",
-    requires: "level-04",
     color: "bg-yellow-100 text-yellow-800",
     encryptedFlag: "666c61677b7a5f696e6465785f68696465735f616c6c5f73696e737d",
     hints: [
@@ -166,7 +160,6 @@ export const LEVEL_CONFIG = [
     title: "Session Manager",
     desc: "Storage Inspection",
     path: "auth",
-    requires: "level-05",
     color: "bg-green-100 text-green-800",
     encryptedFlag: "666c61677b636f6f6b6965735f6172655f74617374797d",
     hints: [
@@ -197,7 +190,6 @@ export const LEVEL_CONFIG = [
     type: "terminal",
     title: "Hidden Services",
     desc: "Network Port Analysis",
-    requires: "level-06",
     color: "bg-neutral-800 text-green-500",
     terminalCommands: ["nmap", "netstat"],
     onStart: "Suspicious activity detected on network.",
@@ -228,7 +220,6 @@ export const LEVEL_CONFIG = [
     type: "terminal",
     title: "Data Recovery",
     desc: "File System Forensics",
-    requires: "level-07",
     color: "bg-blue-900 text-blue-300",
     terminalCommands: ["grep"],
     onStart: "Logs are meant to be grep-ed. Investigate.",
@@ -260,7 +251,6 @@ export const LEVEL_CONFIG = [
     type: "terminal",
     title: "Weaponization",
     desc: "File Permissions",
-    requires: "level-08",
     color: "bg-red-900 text-red-400",
     terminalCommands: ["chmod"],
     onStart: "Dormant payload located in /root. Arm it.",
@@ -291,7 +281,6 @@ export const LEVEL_CONFIG = [
     type: "terminal",
     title: "Privilege Escalation",
     desc: "Identity Spoofing & TTY Bypass",
-    requires: "level-09",
     color: "bg-purple-900 text-purple-400",
     terminalCommands: ["su"],
     onStart: "Initial foothold secured. Escalate to root.",
@@ -324,7 +313,6 @@ export const LEVEL_CONFIG = [
     type: "osint",
     title: "Digital Footprint",
     desc: "EXIF Metadata Extraction",
-    requires: "level-10",
     color: "bg-yellow-900 text-yellow-400",
     onStart: "Incoming file transfer detected.",
     encryptedFlag:
@@ -355,7 +343,6 @@ export const LEVEL_CONFIG = [
     type: "osint",
     title: "Visual Forensics",
     desc: "Steganography & Filtering",
-    requires: "level-11",
     color: "bg-red-900 text-red-400",
     onStart: "Target location identified. Accessing CCTV...",
     encryptedFlag: "666c61677b6e696768745f766973696f6e5f6163746976617465647d",
@@ -381,3 +368,13 @@ export const LEVEL_CONFIG = [
     ],
   },
 ];
+
+LEVEL_CONFIG.forEach((level, index) => {
+  if (index === 0) {
+    level.requires = null;
+  } else {
+    level.requires = LEVEL_CONFIG[index - 1].id;
+  }
+});
+
+export { LEVEL_CONFIG };

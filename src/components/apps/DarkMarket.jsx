@@ -4,15 +4,28 @@ import { supabase } from "../../lib/supabase";
 import {
   ShieldAlert,
   Key,
-  Skull,
   TerminalSquare,
   AlertTriangle,
-  EyeOff,
+  FastForward,
 } from "lucide-react";
+import { LEVEL_CONFIG } from "../../data/config";
 
-export default function DarkMarket() {
+export default function DarkMarket({
+  onClose,
+  solvedIds = [],
+  skippedIds = [],
+  setSkippedIds,
+  progressionIds = [],
+}) {
   const { profile, refreshProfile } = useAuth();
-  const [purchaseStatus, setPurchaseStatus] = useState(null); // { type: 'success' | 'error', msg: '' }
+  const [purchaseStatus, setPurchaseStatus] = useState(null);
+
+  const activeLevel = LEVEL_CONFIG.find(
+    (level) =>
+      (!level.requires || progressionIds.includes(level.requires)) &&
+      !solvedIds.includes(level.id) &&
+      !skippedIds.includes(level.id),
+  );
 
   const MARKET_ITEMS = [
     {
@@ -31,28 +44,9 @@ export default function DarkMarket() {
       icon: TerminalSquare,
       color: "text-orange-500",
     },
-    {
-      id: "sabotage_ui",
-      title: "UI Glitch Payload",
-      desc: "Infects the target's visual interface with noise.",
-      price: 500,
-      icon: EyeOff,
-      color: "text-purple-500",
-      disabled: true, // Placeholder for multiplayer
-    },
-    {
-      id: "skip_level",
-      title: "Zero-Day Bypass",
-      desc: "Completely bypass the current security node.",
-      price: 1000,
-      icon: Skull,
-      color: "text-red-500",
-    },
   ];
 
   const handlePurchase = async (item) => {
-    if (item.disabled) return;
-
     if (profile.credits < item.price) {
       setPurchaseStatus({
         type: "error",
@@ -62,14 +56,13 @@ export default function DarkMarket() {
       return;
     }
 
-    // 1. Deduct Credits in DB
     const newBalance = profile.credits - item.price;
-    const { error } = await supabase
+    const { error: creditError } = await supabase
       .from("profiles")
       .update({ credits: newBalance })
       .eq("id", profile.id);
 
-    if (error) {
+    if (creditError) {
       setPurchaseStatus({
         type: "error",
         msg: "NETWORK ERROR. TRANSACTION FAILED.",
@@ -77,105 +70,150 @@ export default function DarkMarket() {
       return;
     }
 
-    // 2. Refresh Context & Show Success
+    if (item.id === "skip_level" && activeLevel) {
+      const { error: skipError } = await supabase
+        .from("skipped_puzzles")
+        .insert([{ user_id: profile.id, puzzle_id: activeLevel.id }]);
+
+      if (!skipError) {
+        setSkippedIds([...skippedIds, activeLevel.id]);
+      }
+    }
+
     await refreshProfile(profile.id);
     setPurchaseStatus({
       type: "success",
       msg: `TRANSACTION CLEARED. ${item.title.toUpperCase()} ACQUIRED.`,
     });
-
-    // (Future Step: Actually trigger the hint/skip logic here based on item.id)
-
     setTimeout(() => setPurchaseStatus(null), 3000);
   };
 
   return (
-    <div className="min-h-full bg-black text-red-500 font-mono p-6 animate-in fade-in duration-500 relative overflow-hidden">
-      {/* Background Grid & Noise */}
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-      <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 to-black pointer-events-none"></div>
+    // flex column with h-full
+    <div className="h-full bg-black text-red-500 font-mono flex flex-col animate-in fade-in duration-500 relative">
+      {/* Background Textures */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 to-black pointer-events-none z-0"></div>
 
-      <div className="relative z-10 max-w-4xl mx-auto">
-        {/* Market Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-red-900/50 pb-6">
+      {/* Header: Fixed at top */}
+      <div className="p-6 border-b border-red-900/50 shrink-0 relative z-10 bg-black/60 backdrop-blur-md">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-red-950 border border-red-500 flex items-center justify-center animate-pulse">
-              <ShieldAlert size={32} className="text-red-500" />
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-red-950 border border-red-500 flex items-center justify-center animate-pulse shrink-0">
+              <ShieldAlert className="text-red-500 w-6 h-6 md:w-8 md:h-8" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold tracking-widest text-white drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">
+              <h1 className="text-xl md:text-3xl font-bold tracking-widest text-white drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">
                 PH0ENIX MARKET
               </h1>
-              <p className="text-xs text-red-700 mt-1">
-                TOR HIDDEN SERVICE v3 // ANONYMITY GUARANTEED
+              <p className="text-[10px] md:text-xs text-red-700 mt-1">
+                TOR HIDDEN SERVICE v3
               </p>
             </div>
           </div>
-          <div className="mt-4 md:mt-0 text-right bg-red-950/30 p-3 border border-red-900/50">
-            <div className="text-[10px] text-red-700 mb-1">WALLET BALANCE</div>
-            <div className="text-2xl font-bold text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]">
-              {profile?.credits || 0} <span className="text-sm">cR</span>
+          <div className="mt-4 md:mt-0 text-right bg-red-950/30 p-2 md:p-3 border border-red-900/50 w-full md:w-auto flex md:block justify-between items-center">
+            <div className="text-[10px] text-red-700 md:mb-1">
+              WALLET BALANCE
+            </div>
+            <div className="text-xl md:text-2xl font-bold text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]">
+              {profile?.credits || 0}{" "}
+              <span className="text-xs md:text-sm">cR</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Status Messages */}
-        {purchaseStatus && (
-          <div
-            className={`p-4 mb-8 border flex items-center gap-3 font-bold text-sm tracking-widest uppercase animate-in slide-in-from-top-2
-            ${purchaseStatus.type === "error" ? "bg-red-950/50 border-red-500 text-red-400" : "bg-green-950/50 border-green-500 text-green-400"}
-          `}
-          >
-            <AlertTriangle size={18} /> {purchaseStatus.msg}
-          </div>
-        )}
-
-        {/* Items Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {MARKET_ITEMS.map((item) => (
+      {/*  Body: Scrollable area for the items grid */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10">
+        <div className="max-w-4xl mx-auto">
+          {purchaseStatus && (
             <div
-              key={item.id}
-              className={`bg-neutral-950 border border-red-900/30 p-5 relative group transition-all
-              ${item.disabled ? "opacity-50 grayscale" : "hover:border-red-500 hover:shadow-[0_0_20px_rgba(255,0,0,0.2)]"}
-            `}
+              className={`p-4 mb-6 border flex items-center gap-3 font-bold text-[10px] md:text-sm tracking-widest uppercase animate-in slide-in-from-top-2 ${purchaseStatus.type === "error" ? "bg-red-950/50 border-red-500 text-red-400" : "bg-green-950/50 border-green-500 text-green-400"}`}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div
-                  className={`p-3 bg-black border border-neutral-800 ${item.color}`}
-                >
-                  <item.icon size={24} />
+              <AlertTriangle size={18} className="shrink-0" />{" "}
+              {purchaseStatus.msg}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pb-8">
+            {MARKET_ITEMS.map((item) => (
+              <div
+                key={item.id}
+                className="bg-neutral-950 border border-red-900/30 p-4 md:p-5 group hover:border-red-500 transition-all flex flex-col"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div
+                    className={`p-2 md:p-3 bg-black border border-neutral-800 ${item.color}`}
+                  >
+                    <item.icon size={20} className="md:w-6 md:h-6" />
+                  </div>
+                  <div className="text-lg md:text-xl font-bold text-yellow-500">
+                    {item.price} cR
+                  </div>
                 </div>
-                <div className="text-xl font-bold text-yellow-500">
-                  {item.price} cR
+                <h3 className="text-base md:text-lg font-bold text-white mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-[10px] md:text-xs text-neutral-500 leading-relaxed mb-6 flex-1">
+                  {item.desc}
+                </p>
+                <button
+                  onClick={() => handlePurchase(item)}
+                  className="w-full py-2.5 md:py-3 font-bold tracking-widest text-[10px] md:text-sm border bg-red-950/50 border-red-900 text-red-500 hover:bg-red-900 hover:text-white transition-all mt-auto"
+                >
+                  INITIATE TRANSFER
+                </button>
+              </div>
+            ))}
+
+            {/* ZERO-DAY BYPASS SECURE ITEM */}
+            <div className="bg-[#0a0a0a] border border-red-900 p-4 md:p-5 group shadow-[0_0_15px_rgba(255,0,0,0.1)] flex flex-col">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 md:p-3 bg-black border border-red-900 text-red-500 animate-pulse">
+                  <FastForward size={20} className="md:w-6 md:h-6" />
+                </div>
+                <div className="text-lg md:text-xl font-bold text-red-500 border border-red-900 bg-red-950/30 px-2 rounded">
+                  50 cR
                 </div>
               </div>
-
-              <h3 className="text-lg font-bold text-white mb-2">
-                {item.title}
+              <h3 className="text-base md:text-lg font-bold text-white mb-2">
+                Zero-Day Bypass
               </h3>
-              <p className="text-xs text-neutral-500 leading-relaxed min-h-[40px] mb-6">
-                {item.desc}
+              <p className="text-[10px] md:text-xs text-neutral-500 leading-relaxed mb-4 flex-1">
+                Deploy a syndicate exploit to forcefully bypass the active
+                security node.
               </p>
 
+              <div className="bg-red-950/40 border border-red-900/50 rounded p-2 text-[9px] md:text-[10px] text-red-400 mb-4 flex justify-between items-center">
+                <span>TARGET NODE:</span>
+                <span className="font-bold text-white truncate max-w-[120px] md:max-w-none text-right">
+                  {activeLevel
+                    ? activeLevel.title.toUpperCase()
+                    : "NONE ACTIVE"}
+                </span>
+              </div>
+
               <button
-                onClick={() => handlePurchase(item)}
-                disabled={item.disabled}
-                className={`w-full py-3 font-bold tracking-widest text-sm border transition-all
-                  ${
-                    item.disabled
-                      ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed"
-                      : "bg-red-950/50 border-red-900 text-red-500 hover:bg-red-900 hover:text-white active:scale-[0.98]"
-                  }
-                `}
+                onClick={() =>
+                  handlePurchase({
+                    id: "skip_level",
+                    price: 50,
+                    title: "Zero-Day Bypass",
+                  })
+                }
+                disabled={!activeLevel}
+                className={`w-full py-2.5 md:py-3 font-bold tracking-widest text-[10px] md:text-sm border transition-all mt-auto ${!activeLevel ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed" : "bg-red-900/40 border-red-500 text-red-100 hover:bg-red-600 shadow-[0_0_15px_rgba(255,0,0,0.4)]"}`}
               >
-                {item.disabled ? "OUT OF STOCK" : "INITIATE TRANSFER"}
+                {!activeLevel
+                  ? "NO TARGET ACQUIRED"
+                  : "DEPLOY EXPLOIT (-50 cR)"}
               </button>
             </div>
-          ))}
-        </div>
+          </div>
 
-        <div className="mt-12 text-center text-[10px] text-red-900">
-          ALL SALES FINAL. DO NOT TRUST ANYONE.
+          <div className="mt-4 md:mt-8 pb-8 text-center text-[8px] md:text-[10px] text-red-900">
+            ALL SALES FINAL. DO NOT TRUST ANYONE.
+          </div>
         </div>
       </div>
     </div>

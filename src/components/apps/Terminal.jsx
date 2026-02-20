@@ -7,11 +7,17 @@ import { checkCommandLock } from "../../utils/game";
 import { heistCommand } from "../../utils/devExploit";
 import { SensoryEngine } from "../../utils/sensory";
 
-// ADDED PROPS HERE
-export default function Terminal({ onClose, solvedIds, setSolvedIds }) {
-  const { user } = useAuth();
+// submit command use these
+export default function Terminal({
+  onClose,
+  solvedIds,
+  setSolvedIds,
+  skippedIds,
+  setSkippedIds,
+  progressionIds,
+}) {
+  const { user, profile, refreshProfile } = useAuth();
 
-  // STATE (Removed solvedIds from here)
   const [history, setHistory] = useState([]);
   const [input, setInput] = useState("");
   const [cursorPos, setCursorPos] = useState(0);
@@ -38,7 +44,6 @@ export default function Terminal({ onClose, solvedIds, setSolvedIds }) {
 
   useEffect(() => {
     function initTerminal() {
-      // Find the first puzzle that isn't solved using the global solvedIds prop
       const nextPuzzle = PUZZLE_CONFIG.find((p) => !solvedIds.includes(p.id));
 
       const startupLogs = [
@@ -94,19 +99,17 @@ export default function Terminal({ onClose, solvedIds, setSolvedIds }) {
     }
 
     initTerminal();
-  }, [user, solvedIds]); // Re-run if solvedIds changes
+  }, [user, solvedIds]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history]);
-
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  const addToHistory = (type, content) => {
+  const addToHistory = (type, content) =>
     setHistory((prev) => [...prev, { type, content }]);
-  };
 
   const handleCommand = async (e) => {
     if (e.key === "Enter") {
@@ -140,16 +143,21 @@ export default function Terminal({ onClose, solvedIds, setSolvedIds }) {
       try {
         const command = registry[commandName];
         if (command) {
+          // Pass extra context
           await command.execute(args, {
             addToHistory,
             setHistory,
             setCrash,
             user,
+            profile,
+            refreshProfile,
             registry,
             cwd,
             setCwd,
             solvedIds,
             setSolvedIds,
+            skippedIds,
+            setSkippedIds,
           });
         } else {
           addToHistory("error", `Command not found: ${commandName}`);
@@ -166,9 +174,7 @@ export default function Terminal({ onClose, solvedIds, setSolvedIds }) {
     setCursorPos(e.target.selectionStart);
     SensoryEngine.playKeystroke();
   };
-  const handleCursorSelect = (e) => {
-    setCursorPos(e.target.selectionStart);
-  };
+  const handleCursorSelect = (e) => setCursorPos(e.target.selectionStart);
 
   return (
     <div

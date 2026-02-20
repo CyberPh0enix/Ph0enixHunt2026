@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../context/AuthContext";
 import { PUZZLE_CONFIG } from "../../data/puzzles";
 import { SYSTEM_DATA } from "../../config/build.prop";
 import {
@@ -14,11 +12,9 @@ import {
   FileQuestion,
   X,
 } from "lucide-react";
-
 import DarkMarket from "./DarkMarket";
 
-// --- ERROR COMPONENTS ---
-
+// ERROR CODES
 const Error403 = ({ url }) => (
   <div className="flex flex-col items-center justify-center min-h-full bg-white text-gray-800 p-8 text-center font-sans animate-in fade-in duration-300">
     <ShieldAlert size={64} className="text-red-600 mb-6" />
@@ -43,9 +39,7 @@ const Error404 = ({ url }) => (
     <h1 className="text-3xl font-bold text-gray-900 mb-2">
       Resource Not Found
     </h1>
-
     <div className="w-16 h-1 bg-amber-500 mb-6 rounded-full"></div>
-
     <p className="max-w-md text-gray-600 mb-8 leading-relaxed text-sm">
       The server could not locate the requested file directory:
       <br />
@@ -53,7 +47,6 @@ const Error404 = ({ url }) => (
         {url}
       </code>
     </p>
-
     <div className="text-[10px] text-gray-400 font-mono border-t pt-4 w-full max-w-xs mx-auto">
       ERR_FILE_NOT_FOUND
       <br />
@@ -62,7 +55,6 @@ const Error404 = ({ url }) => (
   </div>
 );
 
-// --- NEW TAB PAGE (Native Feel) ---
 const IntranetHome = ({ onNavigate, browserPuzzles }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -110,11 +102,9 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
           onKeyDown={handleSearch}
           placeholder={`Search ${SYSTEM_DATA.orgName} docs or enter URL...`}
           className="w-full py-3 sm:py-4 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-full text-gray-800 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 focus:bg-white transition-all shadow-sm text-sm sm:text-base"
-          autoFocus
         />
       </div>
 
-      {/* Shortcuts */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 w-full max-w-3xl px-2">
         {browserPuzzles.map((puzzle) => (
           <button
@@ -123,7 +113,7 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
             className="flex flex-col items-center gap-3 group p-3 sm:p-4 rounded-xl hover:bg-gray-50 transition-colors active:scale-95"
           >
             <div
-              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110 ${puzzle.color.split(" ")[0].replace("bg-", "bg-opacity-90 bg-") || "bg-gray-500"}`}
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110 ${puzzle.color?.split(" ")[0].replace("bg-", "bg-opacity-90 bg-") || "bg-gray-500"}`}
             >
               <span className="font-bold text-base sm:text-lg">
                 {puzzle.title.charAt(0)}
@@ -135,10 +125,7 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
           </button>
         ))}
       </div>
-
       <div className="flex-1"></div>
-
-      {/* Dynamic Footer */}
       <div className="py-6 text-[10px] text-gray-300 font-mono uppercase tracking-widest text-center">
         &copy; 2026 {SYSTEM_DATA.orgName} Systems. Restricted Access.
       </div>
@@ -146,51 +133,36 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
   );
 };
 
-// --- MAIN BROWSER ---
-
-export default function Browser({ onClose }) {
-  const { user } = useAuth();
-
+// [NEW] Destructure progressionIds properly from global props
+export default function Browser({ onClose, progressionIds = [] }) {
   const BASE_URL = SYSTEM_DATA.website;
   const HOME_URL = `${BASE_URL}/home`;
 
   const [url, setUrl] = useState(HOME_URL);
   const [history, setHistory] = useState([HOME_URL]);
-  const [solvedIds, setSolvedIds] = useState([]);
-
   const [initialLoad, setInitialLoad] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // Replaced DB fetch with a simple immersive delay
   useEffect(() => {
-    async function fetchProgress() {
-      if (!user) return;
-      const { data } = await supabase
-        .from("solved_puzzles")
-        .select("puzzle_id")
-        .eq("user_id", user.id);
-      if (data) setSolvedIds(data.map((row) => row.puzzle_id));
-      setInitialLoad(false);
-    }
-    fetchProgress();
-  }, [user]);
+    const timer = setTimeout(() => setInitialLoad(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const navigate = (input) => {
-    let target = input.toLowerCase().trim(); // Normalize input
+    let target = input.toLowerCase().trim();
     if (
       target.includes(".onion") ||
       target.includes("tor://") ||
       target === "market"
-    ) {
+    )
       target = "tor://market.onion";
-    } else if (input.startsWith("/")) {
-      target = `${BASE_URL}${input}`;
-    } else if (!input.startsWith("http") && !input.startsWith("https")) {
+    else if (input.startsWith("/")) target = `${BASE_URL}${input}`;
+    else if (!input.startsWith("http") && !input.startsWith("https"))
       target = `https://${input}`;
-    }
 
     setIsNavigating(true);
     setUrl(target);
-
     setTimeout(() => {
       setHistory((prev) => [...prev, target]);
       setIsNavigating(false);
@@ -200,19 +172,18 @@ export default function Browser({ onClose }) {
   const browserPuzzles = PUZZLE_CONFIG.filter((p) => p.type === "browser");
 
   const renderContent = () => {
-    if (url === "tor://market.onion") {
-      return <DarkMarket />;
-    }
-    if (url === HOME_URL || url === BASE_URL || url === `${BASE_URL}/`) {
+    if (url === "tor://market.onion") return <DarkMarket />;
+    if (url === HOME_URL || url === BASE_URL || url === `${BASE_URL}/`)
       return (
         <IntranetHome onNavigate={navigate} browserPuzzles={browserPuzzles} />
       );
-    }
 
     const puzzle = browserPuzzles.find((p) => url === `${BASE_URL}/${p.path}`);
 
     if (!puzzle) return <Error404 url={url} />;
-    if (puzzle.requires && !solvedIds.includes(puzzle.requires))
+
+    // [FIX] Checks progressionIds (includes skips) instead of solvedIds
+    if (puzzle.requires && !progressionIds.includes(puzzle.requires))
       return <Error403 url={url} />;
 
     const Component = puzzle.component;
@@ -227,7 +198,6 @@ export default function Browser({ onClose }) {
         </div>
       )}
 
-      {/* TOOLBAR */}
       <div className="bg-white p-2 flex gap-2 items-center border-b border-gray-200 shadow-sm shrink-0 z-40 relative">
         <div className="hidden sm:flex gap-1.5 ml-1 mr-2">
           <div
@@ -262,21 +232,14 @@ export default function Browser({ onClose }) {
           </button>
         </div>
 
-        {/* DYNAMIC URL BAR: Red for Tor, Blue for Intranet */}
         <div
-          className={`flex-1 rounded-full px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 border transition-all min-w-0
-            ${
-              url === "tor://market.onion"
-                ? "bg-red-950/20 border-red-900/50 text-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_10px_rgba(255,0,0,0.2)]"
-                : "bg-gray-100 border-transparent text-gray-600 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm"
-            }`}
+          className={`flex-1 rounded-full px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 border transition-all min-w-0 ${url === "tor://market.onion" ? "bg-red-950/20 border-red-900/50 text-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_10px_rgba(255,0,0,0.2)]" : "bg-gray-100 border-transparent text-gray-600 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm"}`}
         >
           {url === "tor://market.onion" ? (
             <ShieldAlert size={12} className="text-red-600 shrink-0" />
           ) : (
             <Lock size={12} className="text-green-600 shrink-0" />
           )}
-
           <input
             type="text"
             value={url}
@@ -293,7 +256,6 @@ export default function Browser({ onClose }) {
             />
           )}
         </div>
-
         <Home
           size={20}
           className="text-gray-400 cursor-pointer hover:text-blue-500 transition-colors mr-2 shrink-0"
