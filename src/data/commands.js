@@ -2,6 +2,7 @@ import { supabase } from "../lib/supabase";
 import { FILE_SYSTEM, FILE_CONTENTS } from "./filesystem";
 import { encodeSecret, decodeSecret } from "../utils/crypto";
 import { LEVEL_CONFIG } from "./config"; // Import your config
+import { SensoryEngine } from "../utils/sensory";
 
 // Helper to hash text (Simple SHA-256 for the browser)
 async function sha256(message) {
@@ -214,7 +215,6 @@ export const SYSTEM_COMMANDS = {
 
       const inputFlag = args.slice(1).join(" ").trim();
       const inputHash = await sha256(inputFlag);
-
       addToHistory("system", "Verifying hash signature...");
 
       let matchedLevel = null;
@@ -247,14 +247,10 @@ export const SYSTEM_COMMANDS = {
             },
           ]);
 
-          if (error) {
-            if (error.code === "23505") {
-              addToHistory("success", "You have already solved this level!");
-            } else {
-              addToHistory("error", `Database Error: ${error.message}`);
-            }
+          if (error && error.code !== "23505") {
+            addToHistory("error", `Database Error: ${error.message}`);
           } else {
-            // REWARD CALCULATION
+            // Smart Rewards & Animations
             const isPostBypass =
               skippedIds && skippedIds.includes(matchedLevel.id);
             const rewardCR = isPostBypass ? 25 : 100;
@@ -263,7 +259,6 @@ export const SYSTEM_COMMANDS = {
             if (profile) {
               const newCredits = (profile.credits || 0) + rewardCR;
               const newScore = (profile.score || 0) + rewardXP;
-
               await supabase
                 .from("profiles")
                 .update({ credits: newCredits, score: newScore })
@@ -271,29 +266,39 @@ export const SYSTEM_COMMANDS = {
               if (refreshProfile) await refreshProfile(user.id);
             }
 
+            SensoryEngine.playSuccess();
             addToHistory(
               "success",
               `CORRECT! ${matchedLevel.title} Completed.`,
+              { animate: "decrypt" },
             );
 
-            // Show dynamic terminal message based on status
             if (isPostBypass) {
               addToHistory(
                 "warning",
                 `PENALTY APPLIED: Partial Reward (+${rewardCR} cR / +${rewardXP} XP) due to prior bypass.`,
+                { animate: "decrypt" },
               );
             } else {
-              addToHistory("info", `REWARD: +${rewardCR} cR / +${rewardXP} XP`);
+              addToHistory(
+                "info",
+                `REWARD: +${rewardCR} cR / +${rewardXP} XP`,
+                { animate: "decrypt" },
+              );
             }
 
             if (setSolvedIds)
               setSolvedIds((prev) => [...prev, matchedLevel.id]);
           }
         } else {
-          addToHistory("success", `CORRECT! (Guest Mode)`);
+          SensoryEngine.playSuccess();
+          addToHistory("success", `CORRECT! (Guest Mode)`, {
+            animate: "decrypt",
+          });
           if (setSolvedIds) setSolvedIds((prev) => [...prev, matchedLevel.id]);
         }
       } else {
+        SensoryEngine.playError();
         addToHistory("error", "INCORRECT. Flag signature mismatch.");
       }
     },

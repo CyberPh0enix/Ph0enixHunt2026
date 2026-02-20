@@ -9,6 +9,7 @@ import {
   FastForward,
 } from "lucide-react";
 import { LEVEL_CONFIG } from "../../data/config";
+import CountUp from "../ui/CountUp";
 
 export default function DarkMarket({
   onClose,
@@ -116,7 +117,7 @@ export default function DarkMarket({
               WALLET BALANCE
             </div>
             <div className="text-xl md:text-2xl font-bold text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]">
-              {profile?.credits || 0}{" "}
+              <CountUp end={profile?.credits || 0} />{" "}
               <span className="text-xs md:text-sm">cR</span>
             </div>
           </div>

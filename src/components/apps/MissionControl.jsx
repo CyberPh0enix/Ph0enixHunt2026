@@ -12,6 +12,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { LEVEL_CONFIG } from "../../data/config";
+import CountUp from "../ui/CountUp";
 
 // Dynamic Icon Assign
 const getIconForType = (type) => {
@@ -59,12 +60,15 @@ export default function MissionControl({
           <div>
             <div className="text-[10px] text-green-700">CREDITS (BTC)</div>
             <div className="font-bold text-yellow-500 flex items-center gap-1 justify-end">
-              {profile?.credits || 0} <span className="text-xs">cR</span>
+              <CountUp end={profile?.credits || 0} />{" "}
+              <span className="text-xs">cR</span>
             </div>
           </div>
           <div className="hidden sm:block">
             <div className="text-[10px] text-green-700">CLEARANCE SCORE</div>
-            <div className="font-bold text-white">{profile?.score || 0} XP</div>
+            <div className="font-bold text-white">
+              <CountUp end={profile?.score || 0} suffix=" XP" />
+            </div>
           </div>
           <button
             onClick={onClose}

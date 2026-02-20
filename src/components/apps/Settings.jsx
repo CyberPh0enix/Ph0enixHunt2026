@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import eruda from "eruda";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { SensoryEngine } from "../../utils/sensory";
 import {
   LogOut,
-  User,
   Shield,
   ArrowLeft,
   Cpu,
@@ -14,36 +14,50 @@ import {
   Bug,
   ToggleLeft,
   ToggleRight,
+  Volume2,
+  VolumeX,
+  Vibrate,
 } from "lucide-react";
 import LogoutConfirmation from "../os/LogoutConfirm";
 import { SYSTEM_DATA } from "../../config/build.prop";
 import { devExploitManager } from "../../utils/devExploit";
+import SecureCard from "../ui/SecureCard";
 
 export default function Settings({ onClose }) {
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const { addToast } = useToast();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // EASTER EGG STATES
+  // SENSORY STATES
+  const [soundOn, setSoundOn] = useState(SensoryEngine.soundEnabled);
+  const [hapticsOn, setHapticsOn] = useState(SensoryEngine.hapticsEnabled);
+
+  // EASTER EGG STATES (Original logic retained)
   const [osClicks, setOsClicks] = useState(0);
   const [showOsEgg, setShowOsEgg] = useState(false);
-
-  // devMode states
   const [devClicks, setDevClicks] = useState(0);
 
   const [devMenuUnlocked, setDevMenuUnlocked] = useState(
     localStorage.getItem("_DEV_MENU_UNLOCKED") === "true",
   );
-
-  // master switch
   const [devModeActive, setDevModeActive] = useState(
     localStorage.getItem("_DEV_MODE_ACTIVE") === "true",
   );
-
-  // Eruda
   const [webInspectorActive, setWebInspectorActive] = useState(
     localStorage.getItem("_WEB_INSPECTOR_ACTIVE") === "true",
   );
+
+  const toggleSound = () => {
+    SensoryEngine.soundEnabled = !soundOn;
+    setSoundOn(!soundOn);
+    if (!soundOn) SensoryEngine.playKeystroke();
+  };
+
+  const toggleHaptics = () => {
+    SensoryEngine.hapticsEnabled = !hapticsOn;
+    setHapticsOn(!hapticsOn);
+    if (!hapticsOn) SensoryEngine.vibrate([50]);
+  };
 
   const handleBuildClick = () => {
     if (devMenuUnlocked) return;
@@ -52,13 +66,10 @@ export default function Settings({ onClose }) {
     if (newCount >= 7) {
       setDevMenuUnlocked(true);
       localStorage.setItem("_DEV_MENU_UNLOCKED", "true");
-
-      // enable the master switch on initial unlock
       setDevModeActive(true);
       localStorage.setItem("_DEV_MODE_ACTIVE", "true");
-
       addToast("Developer Mode Enabled. Debugging active.", "warning");
-      devExploitManager.triggerDevMode(); // breadcrumbs
+      devExploitManager.triggerDevMode();
     }
   };
 
@@ -69,13 +80,12 @@ export default function Settings({ onClose }) {
   };
 
   const toggleWebInspector = () => {
-    if (!devModeActive) return; // Prevent toggling if master switch is off
+    if (!devModeActive) return;
     const newState = !webInspectorActive;
     setWebInspectorActive(newState);
     localStorage.setItem("_WEB_INSPECTOR_ACTIVE", newState.toString());
   };
 
-  // 2. OS VERSION EASTER EGG LOGIC (3 Clicks)
   const handleOsClick = () => {
     setOsClicks((prev) => prev + 1);
   };
@@ -83,7 +93,6 @@ export default function Settings({ onClose }) {
   useEffect(() => {
     if (osClicks >= 3) {
       setShowOsEgg(true);
-      // Auto-close the egg after 3 seconds
       const timer = setTimeout(() => {
         setShowOsEgg(false);
         setOsClicks(0);
@@ -121,7 +130,6 @@ export default function Settings({ onClose }) {
 
   return (
     <div className="h-full bg-neutral-900 text-white flex flex-col font-mono animate-in slide-in-from-right duration-300 relative overflow-hidden">
-      {/* Header */}
       <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-neutral-800/50 shrink-0">
         <button
           onClick={onClose}
@@ -132,31 +140,45 @@ export default function Settings({ onClose }) {
         <span className="font-bold tracking-wider">SYSTEM_CONFIG</span>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-        {/* Profile Card */}
+        {/* NEW SECURE CARD UI */}
+        <SecureCard
+          username={profile?.username}
+          email={user?.email}
+          xp={profile?.score}
+          credits={profile?.credits}
+        />
+
+        {/* SENSORY CONTROLS */}
         <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
-          <div className="flex items-center gap-3 text-green-400 mb-2">
-            <User size={18} />
+          <div className="flex items-center gap-3 text-purple-400 mb-2">
+            <Activity size={18} />
             <span className="text-sm font-bold uppercase">
-              Operator Identity
+              Sensory Interface
             </span>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] text-neutral-500 uppercase tracking-widest">
-              Access ID
-            </label>
-            <p className="text-sm text-neutral-300 truncate">{user?.email}</p>
+          <div className="flex items-center justify-between py-2 border-b border-white/10">
+            <span className="text-xs text-neutral-300 flex items-center gap-2">
+              <Volume2 size={14} /> System Audio
+            </span>
+            <button
+              onClick={toggleSound}
+              className={`${soundOn ? "text-green-500" : "text-neutral-600"} transition-colors`}
+            >
+              {soundOn ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+            </button>
           </div>
-
-          <div className="space-y-1">
-            <label className="text-[10px] text-neutral-500 uppercase tracking-widest">
-              UUID
-            </label>
-            <p className="text-[10px] text-neutral-400 font-mono break-all">
-              {user?.id}
-            </p>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-xs text-neutral-300 flex items-center gap-2">
+              <Vibrate size={14} /> Haptics
+            </span>
+            <button
+              onClick={toggleHaptics}
+              className={`${hapticsOn ? "text-green-500" : "text-neutral-600"} transition-colors`}
+            >
+              {hapticsOn ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+            </button>
           </div>
         </div>
 
@@ -166,8 +188,6 @@ export default function Settings({ onClose }) {
             <Cpu size={18} />
             <span className="text-sm font-bold uppercase">System Build</span>
           </div>
-
-          {/* OS Version (Triple Click Trigger) */}
           <div
             onClick={handleOsClick}
             className="flex justify-between items-center p-2 rounded hover:bg-white/5 cursor-pointer transition-colors active:scale-95"
@@ -177,8 +197,6 @@ export default function Settings({ onClose }) {
             </label>
             <p className="text-sm text-neutral-300">{SYSTEM_DATA.version}</p>
           </div>
-
-          {/* Build Number (7 Click Trigger) */}
           <div
             onClick={handleBuildClick}
             className="flex justify-between items-center p-2 rounded hover:bg-white/5 cursor-pointer transition-colors active:scale-95"
@@ -190,8 +208,6 @@ export default function Settings({ onClose }) {
               {SYSTEM_DATA.buildNumber}
             </p>
           </div>
-
-          {/* Registered Developer */}
           <div className="flex justify-between items-center p-2 rounded hover:bg-white/5 transition-colors">
             <label className="text-[10px] text-neutral-500 uppercase tracking-widest">
               Developer
@@ -211,8 +227,6 @@ export default function Settings({ onClose }) {
                 Developer Options
               </span>
             </div>
-
-            {/* MASTER SWITCH */}
             <div className="flex items-center justify-between py-2 border-b border-green-500/50">
               <span className="text-xs font-bold text-neutral-200">
                 Developer Mode
@@ -228,12 +242,9 @@ export default function Settings({ onClose }) {
                 )}
               </button>
             </div>
-
-            {/* SUB-MENU */}
             <div
               className={`transition-opacity duration-300 space-y-3 ${devModeActive ? "opacity-100" : "opacity-30 pointer-events-none"}`}
             >
-              {/* ERUDA TOOL SWITCH */}
               <div className="flex items-center justify-between py-1 border-b border-green-500/20 mb-2">
                 <span className="text-xs text-neutral-300">
                   Enable Web Inspector
@@ -249,12 +260,9 @@ export default function Settings({ onClose }) {
                   )}
                 </button>
               </div>
-
               <p className="text-[10px] text-neutral-400">
                 Debug tools active. View & Modify DOM.
               </p>
-
-              {/* ACTION BUTTONS */}
               <button
                 onClick={() =>
                   addToast("Memory Dump: 0x000000 - [PROTECTED]", "error")
@@ -298,7 +306,6 @@ export default function Settings({ onClose }) {
         <div className="h-4"></div>
       </div>
 
-      {/* OS EASTER EGG OVERLAY */}
       {showOsEgg && (
         <div className="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300">
           <Activity size={120} className="text-green-500 animate-spin-slow" />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { PUZZLE_CONFIG } from "../../data/puzzles";
 import { SYSTEM_COMMANDS } from "../../data/commands";
@@ -6,8 +6,8 @@ import { SYSTEM_DATA } from "../../config/build.prop";
 import { checkCommandLock } from "../../utils/game";
 import { heistCommand } from "../../utils/devExploit";
 import { SensoryEngine } from "../../utils/sensory";
+import DecryptedText from "../ui/DecryptedText";
 
-// submit command use these
 export default function Terminal({
   onClose,
   solvedIds,
@@ -27,6 +27,7 @@ export default function Terminal({
 
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const prevSolvedIds = useRef(solvedIds);
 
   if (crash) throw new Error("MANUAL_KERNEL_PANIC_INITIATED_BY_USER");
 
@@ -42,18 +43,37 @@ export default function Terminal({
     return reg;
   }, []);
 
-  useEffect(() => {
-    function initTerminal() {
-      const nextPuzzle = PUZZLE_CONFIG.find((p) => !solvedIds.includes(p.id));
+  // Encapsulated boot sequence so we can call it initially AND after a delay
+  const initTerminal = useCallback(
+    (currentSolvedIds, isReboot = false) => {
+      const nextPuzzle = PUZZLE_CONFIG.find(
+        (p) => !currentSolvedIds.includes(p.id),
+      );
+      const startupLogs = [];
 
-      const startupLogs = [
-        {
+      if (isReboot) {
+        startupLogs.push({
+          type: "info",
+          content: "========================================",
+        });
+        startupLogs.push({
+          type: "system",
+          content: "UPLINK ESTABLISHED. LOADING NEXT NODE...",
+        });
+      } else {
+        startupLogs.push({
           type: "system",
           content: `${SYSTEM_DATA.osName} Kernel ${SYSTEM_DATA.version}`,
-        },
-        { type: "system", content: `Connected as: ${user?.email || "guest"}` },
-        { type: "info", content: "----------------------------------------" },
-      ];
+        });
+        startupLogs.push({
+          type: "system",
+          content: `Connected as: ${user?.email || "guest"}`,
+        });
+        startupLogs.push({
+          type: "info",
+          content: "----------------------------------------",
+        });
+      }
 
       if (!nextPuzzle) {
         startupLogs.push({
@@ -78,11 +98,7 @@ export default function Terminal({
       } else {
         startupLogs.push({
           type: "warning",
-          content: `ALERT: Threat detected in ${nextPuzzle.title}.`,
-        });
-        startupLogs.push({
-          type: "error",
-          content: `Terminal: RESTRICTED MODE`,
+          content: `ALERT: Threat detected in ${nextPuzzle.title}. Terminal: RESTRICTED MODE`,
         });
       }
 
@@ -90,16 +106,32 @@ export default function Terminal({
         type: "info",
         content: "----------------------------------------",
       });
-      startupLogs.push({
-        type: "info",
-        content: `Type 'help' for available commands.`,
-      });
 
-      setHistory(startupLogs);
+      if (isReboot) {
+        setHistory((prev) => [...prev, ...startupLogs]);
+      } else {
+        setHistory(startupLogs);
+      }
+    },
+    [user],
+  );
+
+  // Initial Load
+  useEffect(() => {
+    initTerminal(solvedIds, false);
+  }, []);
+
+  // Smart Transition Effect
+  useEffect(() => {
+    if (solvedIds.length > prevSolvedIds.current.length) {
+      const timer = setTimeout(() => {
+        initTerminal(solvedIds, true);
+      }, 2500);
+
+      prevSolvedIds.current = solvedIds;
+      return () => clearTimeout(timer);
     }
-
-    initTerminal();
-  }, [user, solvedIds]);
+  }, [solvedIds, initTerminal]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,8 +140,9 @@ export default function Terminal({
     inputRef.current?.focus();
   }, []);
 
-  const addToHistory = (type, content) =>
-    setHistory((prev) => [...prev, { type, content }]);
+  const addToHistory = (type, content, options = {}) => {
+    setHistory((prev) => [...prev, { type, content, options }]);
+  };
 
   const handleCommand = async (e) => {
     if (e.key === "Enter") {
@@ -123,18 +156,12 @@ export default function Terminal({
 
       const args = cmdStr.split(" ");
       const commandName = args[0].toLowerCase();
-
-      // Check locks using the global state
       const lockStatus = checkCommandLock(commandName, solvedIds);
 
       if (lockStatus.isLocked) {
         addToHistory(
           "error",
           `PERMISSION DENIED: Command '${commandName}' is encrypted.`,
-        );
-        addToHistory(
-          "info",
-          `security_protocol: Unlocks after completing ${lockStatus.requiredLevel}`,
         );
         setProcessing(false);
         return;
@@ -143,7 +170,6 @@ export default function Terminal({
       try {
         const command = registry[commandName];
         if (command) {
-          // Pass extra context
           await command.execute(args, {
             addToHistory,
             setHistory,
@@ -174,7 +200,6 @@ export default function Terminal({
     setCursorPos(e.target.selectionStart);
     SensoryEngine.playKeystroke();
   };
-  const handleCursorSelect = (e) => setCursorPos(e.target.selectionStart);
 
   return (
     <div
@@ -207,7 +232,11 @@ export default function Terminal({
                         : "text-green-500"
             }
           >
-            {line.content}
+            {line.options?.animate === "decrypt" ? (
+              <DecryptedText text={line.content} speed={10} />
+            ) : (
+              line.content
+            )}
           </div>
         ))}
         {processing && (
@@ -224,7 +253,7 @@ export default function Terminal({
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleCommand}
-            onSelect={handleCursorSelect}
+            onSelect={(e) => setCursorPos(e.target.selectionStart)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-text z-10"
             autoComplete="off"
             autoFocus

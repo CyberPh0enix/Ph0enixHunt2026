@@ -1,72 +1,78 @@
-let audioCtx = null;
-
-const initAudio = () => {
-  if (!window.AudioContext && !window.webkitAudioContext) return null;
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+class SensorySystem {
+  constructor() {
+    this.audioCtx = null;
+    this.soundEnabled = true;
+    this.hapticsEnabled = true;
   }
-  if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-  return audioCtx;
-};
 
-// Base synthesizer function
-const playTone = (freq, type, duration, vol = 0.1, delay = 0) => {
-  const ctx = initAudio();
-  if (!ctx) return;
-
-  const oscillator = ctx.createOscillator();
-  const gainNode = ctx.createGain();
-
-  oscillator.type = type; // 'sine', 'square', 'sawtooth', 'triangle'
-  oscillator.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-
-  // Volume envelope (prevents clicking sounds at start/end of tones)
-  gainNode.gain.setValueAtTime(0, ctx.currentTime + delay);
-  gainNode.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.01);
-  gainNode.gain.exponentialRampToValueAtTime(
-    0.001,
-    ctx.currentTime + delay + duration,
-  );
-
-  oscillator.connect(gainNode);
-  gainNode.connect(ctx.destination);
-
-  oscillator.start(ctx.currentTime + delay);
-  oscillator.stop(ctx.currentTime + delay + duration);
-};
-
-export const SensoryEngine = {
-  vibrate: (pattern) => {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(pattern);
+  initAudio() {
+    if (!this.audioCtx) {
+      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-  },
+    if (this.audioCtx.state === "suspended") {
+      this.audioCtx.resume();
+    }
+  }
 
-  playKeystroke: () => {
-    // Very short, high-pitched mechanical "click" (Square wave)
-    playTone(800, "square", 0.03, 0.02);
-  },
+  playTone(freq, type, duration, vol = 0.1) {
+    if (!this.soundEnabled) return;
+    try {
+      this.initAudio();
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
 
-  triggerSuccess: () => {
-    // Ascending major chime (Sine wave)
-    playTone(523.25, "sine", 0.15, 0.1, 0); // C5
-    playTone(659.25, "sine", 0.15, 0.1, 0.1); // E5
-    playTone(783.99, "sine", 0.3, 0.1, 0.2); // G5
-    SensoryEngine.vibrate([50, 50, 50]);
-  },
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
 
-  triggerError: () => {
-    // Harsh, dissonant low buzz (Sawtooth wave)
-    playTone(150, "sawtooth", 0.3, 0.1, 0);
-    playTone(155, "sawtooth", 0.3, 0.1, 0); // Slight detune for harshness
-    SensoryEngine.vibrate([200, 100, 200]);
-  },
+      gain.gain.setValueAtTime(vol, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(
+        0.01,
+        this.audioCtx.currentTime + duration,
+      );
 
-  triggerAlert: () => {
-    // Mid-pitch digital ping
-    playTone(440, "sine", 0.2, 0.1, 0); // A4
-    SensoryEngine.vibrate([100]);
-  },
-};
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start();
+      osc.stop(this.audioCtx.currentTime + duration);
+    } catch (e) {
+      console.warn("Audio playback failed", e);
+    }
+  }
+
+  vibrate(pattern) {
+    if (!this.hapticsEnabled || !navigator.vibrate) return;
+    try {
+      navigator.vibrate(pattern);
+    } catch (e) {}
+  }
+
+  // Base Methods
+  playSuccess() {
+    this.playTone(440, "sine", 0.15, 0.1);
+    setTimeout(() => this.playTone(659.25, "sine", 0.4, 0.1), 100);
+    this.vibrate([50, 50, 50]);
+  }
+
+  playError() {
+    this.playTone(150, "sawtooth", 0.3, 0.15);
+    this.vibrate([200, 100, 200]);
+  }
+
+  playKeystroke() {
+    this.playTone(800, "square", 0.02, 0.01);
+  }
+
+  // Aliases for ToastContext
+  triggerSuccess() {
+    this.playSuccess();
+  }
+  triggerError() {
+    this.playError();
+  }
+  triggerAlert() {
+    this.playTone(600, "sine", 0.1, 0.05);
+    this.vibrate([30]);
+  }
+}
+
+export const SensoryEngine = new SensorySystem();
