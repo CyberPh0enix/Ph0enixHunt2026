@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { UserX, Database, Fingerprint } from "lucide-react";
 
-export default function Level06({ flag }) {
+export default function SessionManager({ flag }) {
   const [checking, setChecking] = useState(true);
 
   // Set the cookie silently

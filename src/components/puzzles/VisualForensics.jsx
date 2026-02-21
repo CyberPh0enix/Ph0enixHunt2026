@@ -78,7 +78,7 @@ function FeedCanvas({ filterStyle, flag }) {
   );
 }
 
-export default function Level12App({ onClose, progressionIds = [] }) {
+export default function VisualForensics({ onClose, progressionIds = [] }) {
   const isUnlocked = isLevelUnlocked("visual-forensics", progressionIds);
   const RAW_FLAG = getLevelFlag("visual-forensics");
 

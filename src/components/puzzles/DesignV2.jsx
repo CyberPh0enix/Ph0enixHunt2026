@@ -1,6 +1,7 @@
 import { SYSTEM_DATA } from "../../config/build.prop";
+import ObfuscatedText from "../ui/ObfuscatedText";
 
-export default function Level02({ flag }) {
+export default function DesignV2({ flag }) {
   const colors = [
     { name: "Primary Blue", hex: "#2563EB", text: "text-white" },
     { name: "Secondary Slate", hex: "#475569", text: "text-white" },
@@ -67,14 +68,12 @@ export default function Level02({ flag }) {
             <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm relative group">
               <div className="h-32 bg-[#0a0a0a] flex items-center justify-center p-4">
                 <div className="text-[#0a0a0a] font-mono text-sm select-text selection:bg-blue-500 selection:text-white text-center flex flex-wrap justify-center">
-                  {flag.split("").map((char, index) => (
-                    <span
-                      key={index}
-                      className="inline-block hover:text-[#0b0b0b] transition-colors duration-1000"
-                    >
-                      {char}
-                    </span>
-                  ))}
+                  {/* BEAUTIFUL & CLEAN ANTI-CHEAT */}
+                  <ObfuscatedText
+                    text={flag}
+                    className="justify-center"
+                    spanClassName="hover:text-[#0b0b0b] transition-colors duration-1000"
+                  />
                 </div>
               </div>
               <div className="p-4 bg-white flex justify-between items-center">

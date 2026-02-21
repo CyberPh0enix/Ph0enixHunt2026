@@ -8,7 +8,8 @@ import {
   Grid,
 } from "lucide-react";
 import { isLevelUnlocked } from "../../utils/game";
-import { getPuzzleImage } from "../puzzles/Level11";
+import { getPuzzleImage } from "../puzzles/DigitalFootprint";
+import ObfuscatedText from "../ui/ObfuscatedText";
 
 const DUMMY_IMAGES = [
   {
@@ -179,7 +180,8 @@ export default function Gallery({ onClose, progressionIds = [] }) {
                     </span>
                     {/* The flag is evaluated dynamically here! */}
                     <span className="font-mono text-[10px] text-blue-400 break-all bg-blue-900/20 p-2 rounded block border border-blue-500/20">
-                      {selectedImage.getLocation()}
+                      {/* EXIF ANTI-CHEAT */}
+                      <ObfuscatedText text={selectedImage.getLocation()} />
                     </span>
                   </div>
                 </div>

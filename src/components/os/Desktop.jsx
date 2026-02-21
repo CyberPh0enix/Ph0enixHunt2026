@@ -26,7 +26,7 @@ import { useToast } from "../../context/ToastContext";
 import Terminal from "../apps/Terminal";
 import Messenger from "../apps/Messenger";
 import Gallery from "../apps/Gallery";
-import Level12App from "../puzzles/Level12";
+import VisualForensicsApp from "../puzzles/VisualForensics";
 import Browser from "../apps/Browser";
 import Settings from "../apps/Settings";
 import Leaderboard from "../apps/Leaderboard";
@@ -108,7 +108,7 @@ export default function Desktop() {
       name: "CCTV",
       icon: Video,
       color: "text-red-500",
-      component: Level12App,
+      component: VisualForensicsApp,
     },
     {
       id: "leaderboard",

@@ -6,7 +6,7 @@ import {
 } from "../../data/filesystem";
 import { getLevelFlag } from "../../utils/game";
 
-const RAW_FLAG = getLevelFlag("level-08");
+const RAW_FLAG = getLevelFlag("data-recovery");
 
 // Hex dump
 const generateSafeHexDump = () => {
@@ -110,7 +110,7 @@ const generateDynamicFlagLine = (pattern) => {
   return rawLine.replace(new RegExp(`(${pattern})`, "gi"), `>>$1<<`);
 };
 
-export const level08Commands = {
+export const dataRecoveryCommands = {
   grep: {
     description: "Search for patterns in files",
     execute: (args, { addToHistory, cwd }) => {

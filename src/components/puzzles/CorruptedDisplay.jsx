@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Key, AlertTriangle, ShieldCheck } from "lucide-react";
 
-export default function Level05({ flag }) {
+export default function CorruptedDisplay({ flag }) {
   const [revealed, setRevealed] = useState(false);
 
   if (revealed) {

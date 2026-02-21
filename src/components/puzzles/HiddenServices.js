@@ -1,10 +1,10 @@
 import { getLevelFlag } from "../../utils/game";
 
-const RAW_FLAG = getLevelFlag("level-07");
+const RAW_FLAG = getLevelFlag("hidden-services");
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const level07Commands = {
+export const hiddenServicesCommands = {
   netstat: {
     description:
       "Print network connections, routing tables, and interface statistics",

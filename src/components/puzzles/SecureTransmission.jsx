@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Activity, Network, ShieldAlert } from "lucide-react";
 
-export default function Level04({ flag }) {
+export default function SecureTransmission({ flag }) {
   const [scanning, setScanning] = useState(true);
 
   const encodedFlag = useMemo(() => {

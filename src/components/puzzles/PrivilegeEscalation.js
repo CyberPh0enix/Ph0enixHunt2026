@@ -1,7 +1,7 @@
 import { createFile, FILE_SYSTEM, FILE_CONTENTS } from "../../data/filesystem";
 import { getLevelFlag } from "../../utils/game";
 
-const RAW_FLAG = getLevelFlag("level-10");
+const RAW_FLAG = getLevelFlag("privilege-escalation");
 
 const injectLevelData = () => {
   // vulnerable backup file with the reused password
@@ -34,7 +34,7 @@ injectLevelData();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const level10Commands = {
+export const privilegeEscalationCommands = {
   su: {
     description: "Change user or become superuser",
     execute: async (args, { addToHistory }) => {

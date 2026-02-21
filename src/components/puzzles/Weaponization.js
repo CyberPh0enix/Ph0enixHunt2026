@@ -1,7 +1,7 @@
 import { createFile, FILE_SYSTEM } from "../../data/filesystem";
 import { getLevelFlag } from "../../utils/game";
 
-const RAW_FLAG = getLevelFlag("level-09");
+const RAW_FLAG = getLevelFlag("weaponization");
 
 const injectLevelData = () => {
   if (!FILE_SYSTEM["/opt/exploit.bin"]) {
@@ -38,7 +38,7 @@ injectLevelData();
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const level09Commands = {
+export const weaponizationCommands = {
   "./exploit.bin": {
     description: "Execute binary",
     hidden: true,
