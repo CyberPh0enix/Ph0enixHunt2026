@@ -18,6 +18,8 @@ import {
   Triangle,
   Target,
   ShoppingCart,
+  FileText,
+  Mail as MailIcon,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -26,6 +28,8 @@ import { useToast } from "../../context/ToastContext";
 import Terminal from "../apps/Terminal";
 import Messenger from "../apps/Messenger";
 import Gallery from "../apps/Gallery";
+import Notes from "../apps/Notes";
+import Mail from "../apps/Mail";
 import VisualForensicsApp from "../puzzles/VisualForensics";
 import Browser from "../apps/Browser";
 import Settings from "../apps/Settings";
@@ -86,7 +90,7 @@ export default function Desktop() {
     },
     {
       id: "browser",
-      name: "Net",
+      name: "Browser",
       icon: Globe,
       color: "text-orange-500",
       component: Browser,
@@ -101,6 +105,24 @@ export default function Desktop() {
       component: Messenger,
       showOnDesktop: true,
       showInTaskbar: true,
+    },
+    {
+      id: "notes",
+      name: "Notes",
+      icon: FileText,
+      color: "text-yellow-200",
+      component: Notes,
+      showOnDesktop: true,
+      showInTaskbar: true,
+    },
+    {
+      id: "mail",
+      name: "Mail",
+      icon: MailIcon,
+      color: "text-blue-400",
+      component: Mail,
+      showOnDesktop: true,
+      showInTaskbar: false,
     },
     {
       id: "gallery",
