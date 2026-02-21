@@ -233,7 +233,7 @@ export const SYSTEM_COMMANDS = {
         if (solvedIds && solvedIds.includes(matchedLevel.id)) {
           addToHistory(
             "warning",
-            `Level ${matchedLevel.id} is already solved.`,
+            `Level [${matchedLevel.title}] is already solved.`,
           );
           return;
         }
@@ -250,11 +250,18 @@ export const SYSTEM_COMMANDS = {
           if (error && error.code !== "23505") {
             addToHistory("error", `Database Error: ${error.message}`);
           } else {
-            // Smart Rewards & Animations
+            // [NEW] Smart Dynamic Rewards Engine!
             const isPostBypass =
               skippedIds && skippedIds.includes(matchedLevel.id);
-            const rewardCR = isPostBypass ? 25 : 100;
-            const rewardXP = isPostBypass ? 25 : 100;
+            const baseReward = matchedLevel.reward || 100;
+
+            // Post-bypass yields only 25% of the dynamic reward
+            const rewardCR = isPostBypass
+              ? Math.floor(baseReward * 0.25)
+              : baseReward;
+            const rewardXP = isPostBypass
+              ? Math.floor(baseReward * 0.25)
+              : baseReward;
 
             if (profile) {
               const newCredits = (profile.credits || 0) + rewardCR;
@@ -300,6 +307,35 @@ export const SYSTEM_COMMANDS = {
       } else {
         SensoryEngine.playError();
         addToHistory("error", "INCORRECT. Flag signature mismatch.");
+      }
+    },
+  },
+
+  b64: {
+    description: "Base64 decode a string",
+    execute: async (args, { addToHistory }) => {
+      if (!localStorage.getItem("ph0enix_b64_unlocked")) {
+        addToHistory("error", "PERMISSION DENIED: 'b64' module not installed.");
+        addToHistory(
+          "info",
+          "Hint: Network utilities can be acquired from the Dark Market.",
+        );
+        return;
+      }
+
+      if (args.length < 2) {
+        addToHistory("error", "Usage: b64 <encoded_string>");
+        return;
+      }
+
+      try {
+        const decoded = atob(args[1]);
+        addToHistory("success", `PAYLOAD DECODED: ${decoded}`);
+      } catch (e) {
+        addToHistory(
+          "error",
+          "DECODE FAILED: Invalid Base64 padding or syntax.",
+        );
       }
     },
   },
