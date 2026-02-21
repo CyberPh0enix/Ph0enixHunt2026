@@ -68,11 +68,11 @@ export default function DesignV2({ flag }) {
             <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm relative group">
               <div className="h-32 bg-[#0a0a0a] flex items-center justify-center p-4">
                 <div className="text-[#0a0a0a] font-mono text-sm select-text selection:bg-blue-500 selection:text-white text-center flex flex-wrap justify-center">
-                  {/* BEAUTIFUL & CLEAN ANTI-CHEAT */}
+                  {/* anti cheat */}
                   <ObfuscatedText
                     text={flag}
                     className="justify-center"
-                    spanClassName="hover:text-[#0b0b0b] transition-colors duration-1000"
+                    charClassName="inline-block hover:text-[#0b0b0b] transition-colors duration-1000"
                   />
                 </div>
               </div>

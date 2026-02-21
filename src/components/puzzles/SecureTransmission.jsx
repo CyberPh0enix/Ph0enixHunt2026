@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Activity, Network, ShieldAlert } from "lucide-react";
+import ObfuscatedText from "../ui/ObfuscatedText";
 
 export default function SecureTransmission({ flag }) {
   const [scanning, setScanning] = useState(true);
@@ -90,7 +91,7 @@ export default function SecureTransmission({ flag }) {
                   instead of breaking the grid layout.
                 */}
                 <div className="col-span-3 font-bold break-all min-w-0 selection:bg-red-500 selection:text-white">
-                  {encodedFlag}
+                  <ObfuscatedText text={encodedFlag} />
                 </div>
               </div>
             )}
