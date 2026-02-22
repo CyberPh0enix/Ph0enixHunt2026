@@ -143,7 +143,7 @@ export default function Settings({ onClose }) {
       <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
         {/* NEW SECURE CARD UI */}
         <SecureCard
-          username={profile?.username}
+          username={profile?.full_name}
           email={user?.email}
           xp={profile?.score}
           credits={profile?.credits}

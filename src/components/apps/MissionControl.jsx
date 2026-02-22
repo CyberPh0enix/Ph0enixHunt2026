@@ -53,7 +53,7 @@ export default function MissionControl({
             <Target size={20} className="text-green-500" /> MISSION CONTROL
           </h2>
           <p className="text-xs text-green-700 mt-1">
-            OPERATIVE: {profile?.username || "UNKNOWN"}
+            OPERATIVE: {profile?.full_name || "UNKNOWN"}
           </p>
         </div>
         <div className="flex gap-6 text-right">

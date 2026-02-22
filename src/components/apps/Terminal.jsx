@@ -48,13 +48,16 @@ export default function Terminal({
         type: "system",
         content: `${SYSTEM_DATA.osName} Kernel ${SYSTEM_DATA.version}`,
       },
-      { type: "system", content: `Connected as: ${user?.email || "guest"}` },
+      {
+        type: "system",
+        content: `Connected as: ${profile?.operative_id || "guest"} [${profile?.full_name || "Unverified"}]`,
+      },
       { type: "info", content: "----------------------------------------" },
       { type: "info", content: `Type 'help' for available commands.` },
       { type: "info", content: "----------------------------------------" },
     ];
     setHistory(startupLogs);
-  }, [user]);
+  }, [profile]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

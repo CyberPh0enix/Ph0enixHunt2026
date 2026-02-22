@@ -12,7 +12,7 @@ export default function Leaderboard({ onClose }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("username, score, id")
+      .select("operative_id, full_name, score, id")
       .order("score", { ascending: false })
       .limit(50);
 
@@ -87,13 +87,11 @@ export default function Leaderboard({ onClose }) {
                   <span
                     className={`text-sm font-bold ${player.id === user?.id ? "text-green-400" : "text-neutral-200"}`}
                   >
-                    {player.username || "Unknown Agent"}
+                    {player.operative_id || "Unknown Agent"}
                   </span>
-                  {player.id === user?.id && (
-                    <span className="text-[9px] text-green-600 uppercase">
-                      It's You
-                    </span>
-                  )}
+                  <span className="text-[10px] text-neutral-500 truncate max-w-[120px]">
+                    {player.full_name}
+                  </span>
                 </div>
               </div>
               <div className="text-right">
