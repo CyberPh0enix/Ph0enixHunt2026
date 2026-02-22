@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="fireGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e11d48"/>   <stop offset="50%" stop-color="#f97316"/>   <stop offset="100%" stop-color="#fbbf24"/>  </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#f97316" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="100" height="100" rx="22" fill="#080808"/>
+
+  <g filter="url(#glow)">
+    <path d="M50 18 L62 36 L50 48 L38 36 Z" fill="url(#fireGrad)"/>
+    <path d="M50 54 L76 34 L86 44 L50 80 L14 44 L24 34 Z" fill="url(#fireGrad)"/>
+    <rect x="35" y="86" width="30" height="6" rx="3" fill="url(#fireGrad)"/>
+  </g>
+</svg>
