@@ -5,10 +5,9 @@ const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null); // [NEW] Store credits & score
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // [NEW] Function to fetch/refresh profile data
   const refreshProfile = async (userId) => {
     if (!userId) return;
     const { data, error } = await supabase
@@ -16,21 +15,16 @@ export const AuthProvider = ({ children }) => {
       .select("*")
       .eq("id", userId)
       .single();
-
-    if (!error && data) {
-      setProfile(data);
-    }
+    if (!error && data) setProfile(data);
   };
 
   useEffect(() => {
-    // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) refreshProfile(session.user.id);
       setLoading(false);
     });
 
-    // Listen for changes on auth state
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -52,12 +46,19 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const signup = async (email, password, username) => {
+  // Generate random CPX ID since we dropped Roll No
+  const signup = async (email, password, fullName) => {
+    const randomCode = Math.floor(1000 + Math.random() * 9000);
+    const operativeId = `CPX-${randomCode}`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username } },
+      options: {
+        data: { full_name: fullName, operative_id: operativeId },
+      },
     });
+
     if (error) throw error;
     return { data, error };
   };
