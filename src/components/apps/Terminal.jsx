@@ -7,6 +7,8 @@ import { checkCommandLock } from "../../utils/game";
 import { heistCommand } from "../../utils/devExploit";
 import { SensoryEngine } from "../../utils/sensory";
 import DecryptedText from "../ui/DecryptedText";
+import AppHeader from "../ui/AppHeader";
+import { Terminal as TerminalIcon } from "lucide-react";
 
 export default function Terminal({
   onClose,
@@ -27,6 +29,7 @@ export default function Terminal({
 
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const initialized = useRef(false);
 
   if (crash) throw new Error("MANUAL_KERNEL_PANIC_INITIATED_BY_USER");
 
@@ -43,6 +46,9 @@ export default function Terminal({
   }, []);
 
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
     const startupLogs = [
       {
         type: "system",
@@ -62,6 +68,7 @@ export default function Terminal({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history]);
+
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -75,7 +82,8 @@ export default function Terminal({
       const cmdStr = input.trim();
       if (!cmdStr) return;
 
-      addToHistory("user", `root@ph0enix:${cwd}# ${cmdStr}`);
+      const shellPrompt = `${profile?.operative_id || "guest"}@ph0enix:${cwd}$`;
+      addToHistory("user", `${shellPrompt} ${cmdStr}`);
       setInput("");
       setCursorPos(0);
       setProcessing(true);
@@ -112,12 +120,13 @@ export default function Terminal({
             setSkippedIds,
           });
         } else {
-          addToHistory("error", `Command not found: ${commandName}`);
+          addToHistory("error", `bash: ${commandName}: command not found`);
         }
       } catch (err) {
         addToHistory("error", `SYSTEM ERROR: ${err.message}`);
       }
       setProcessing(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
@@ -129,34 +138,28 @@ export default function Terminal({
 
   return (
     <div
-      className="h-full bg-black text-green-500 font-mono text-sm p-4 flex flex-col overflow-hidden relative"
+      className="h-full bg-[#050505] text-green-500 font-mono text-sm flex flex-col overflow-hidden relative"
       onClick={() => inputRef.current?.focus()}
     >
-      <div className="flex justify-between items-center border-b border-green-900/50 pb-2 mb-2 shrink-0 z-20">
-        <span className="text-xs uppercase tracking-widest text-green-700">
-          /bin/bash
-        </span>
-        <button onClick={onClose} className="text-red-500 hover:text-red-400">
-          [X]
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto no-scrollbar space-y-1 pb-4 z-20">
+      <AppHeader title="Terminal" icon={TerminalIcon} onClose={onClose} />
+
+      <div className="flex-1 overflow-y-auto no-scrollbar space-y-1.5 p-4 z-20">
         {history.map((line, i) => (
           <div
             key={i}
-            className={
+            className={`leading-relaxed break-words ${
               line.type === "error"
-                ? "text-red-500"
+                ? "text-red-500 font-bold"
                 : line.type === "success"
-                  ? "text-green-300 font-bold"
+                  ? "text-green-400 font-bold"
                   : line.type === "system"
-                    ? "text-green-800"
+                    ? "text-blue-400 font-bold"
                     : line.type === "warning"
                       ? "text-yellow-500"
                       : line.type === "user"
-                        ? "text-white"
+                        ? "text-white font-bold"
                         : "text-green-500"
-            }
+            }`}
           >
             {line.options?.animate === "decrypt" ? (
               <DecryptedText text={line.content} speed={10} />
@@ -168,11 +171,14 @@ export default function Terminal({
         {processing && (
           <div className="text-green-800 animate-pulse">Processing...</div>
         )}
-        <div ref={bottomRef} />
+        <div ref={bottomRef} className="h-2" />
       </div>
-      <div className="flex items-center gap-2 mt-2 shrink-0 z-20 relative text-base">
-        <span className="text-green-600 shrink-0">root@ph0enix:{cwd}#</span>
-        <div className="relative flex-1 flex flex-wrap break-all">
+
+      <div className="flex items-start gap-2 p-4 pt-0 shrink-0 z-20 relative text-base">
+        <span className="text-green-600 font-bold shrink-0 pt-0.5">
+          {profile?.operative_id || "guest"}@ph0enix:{cwd}$
+        </span>
+        <div className="relative flex-1 flex flex-wrap break-all min-h-[24px]">
           <input
             ref={inputRef}
             type="text"
@@ -181,15 +187,15 @@ export default function Terminal({
             onKeyDown={handleCommand}
             onSelect={(e) => setCursorPos(e.target.selectionStart)}
             className="absolute inset-0 w-full h-full opacity-0 cursor-text z-10"
+            autoCapitalize="off"
             autoComplete="off"
+            spellCheck="false"
             autoFocus
           />
-          <span className="text-white whitespace-pre-wrap">
+          <span className="text-white whitespace-pre-wrap mt-0.5">
             {input.slice(0, cursorPos)}
-            <span className="border-b-2 border-green-500 animate-pulse text-white">
-              {input[cursorPos] || "\u00A0"}
-            </span>
-            {input.slice(cursorPos + 1)}
+            <span className="inline-block w-2.5 h-4 bg-green-500 animate-pulse translate-y-0.5 mx-[1px]"></span>
+            {input.slice(cursorPos)}
           </span>
         </div>
       </div>

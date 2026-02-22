@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { Trophy, RefreshCw, Crown } from "lucide-react";
+import AppHeader from "../ui/AppHeader";
 
 export default function Leaderboard({ onClose }) {
   const { user } = useAuth();
@@ -16,9 +17,7 @@ export default function Leaderboard({ onClose }) {
       .order("score", { ascending: false })
       .limit(50);
 
-    if (!error) {
-      setPlayers(data);
-    }
+    if (!error) setPlayers(data);
     setLoading(false);
   };
 
@@ -28,33 +27,21 @@ export default function Leaderboard({ onClose }) {
 
   return (
     <div className="h-full bg-neutral-900 text-white flex flex-col font-mono animate-in slide-in-from-bottom duration-300">
-      {/* Header */}
-      <div className="bg-yellow-600/20 border-b border-yellow-600/30 p-4 flex justify-between items-center shrink-0">
-        <div className="flex items-center gap-2 text-yellow-500">
-          <Trophy size={20} />
-          <span className="font-bold tracking-wider uppercase">
-            Global Rankings
-          </span>
-        </div>
-        <div className="flex gap-2">
+      <AppHeader
+        title="Global Rankings"
+        icon={Trophy}
+        onClose={onClose}
+        extra={
           <button
             onClick={fetchLeaderboard}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-            title="Refresh"
+            className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-yellow-500"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </button>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-neutral-400"
-          >
-            [X]
-          </button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2 no-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
         {loading ? (
           <div className="text-center p-10 text-neutral-500 animate-pulse">
             Fetching satellite data...
