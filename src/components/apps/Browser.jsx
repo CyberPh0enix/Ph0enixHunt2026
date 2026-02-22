@@ -61,7 +61,11 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchTerm.trim()) {
-      if (searchTerm.startsWith("/") || searchTerm.startsWith("http")) {
+      if (
+        searchTerm.startsWith("/") ||
+        searchTerm.startsWith("http") ||
+        searchTerm.includes(".onion")
+      ) {
         onNavigate(searchTerm);
       } else {
         onNavigate(`${SYSTEM_DATA.website}/${searchTerm}`);
@@ -73,7 +77,6 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
     <div className="min-h-full flex flex-col items-center justify-center p-6 bg-white animate-in fade-in zoom-in duration-300">
       <div className="flex-1 max-h-32 hidden sm:block"></div>
 
-      {/* Dynamic Brand */}
       <div className="flex flex-col items-center mb-8 sm:mb-12">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-4 sm:mb-6 transform transition-transform hover:scale-105 hover:rotate-3">
           <span className="text-white text-3xl sm:text-4xl font-bold tracking-tighter">
@@ -88,7 +91,6 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
         </p>
       </div>
 
-      {/* Search Bar */}
       <div className="w-full max-w-lg relative mb-10 group z-10">
         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
           <Search
@@ -114,7 +116,7 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
             className="flex flex-col items-center gap-3 group p-3 sm:p-4 rounded-xl hover:bg-gray-50 transition-colors active:scale-95"
           >
             <div
-              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110 ${puzzle.color?.split(" ")[0].replace("bg-", "bg-opacity-90 bg-") || "bg-gray-500"}`}
+              className={`w-10 h-10 sm:w-12 h-12 rounded-full flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110 ${puzzle.color?.split(" ")[0].replace("bg-", "bg-opacity-90 bg-") || "bg-gray-500"}`}
             >
               <span className="font-bold text-base sm:text-lg">
                 {puzzle.title.charAt(0)}
@@ -134,7 +136,6 @@ const IntranetHome = ({ onNavigate, browserPuzzles }) => {
   );
 };
 
-// [NEW] Destructure progressionIds properly from global props
 export default function Browser({ onClose, progressionIds = [] }) {
   const BASE_URL = SYSTEM_DATA.website;
   const HOME_URL = `${BASE_URL}/home`;
@@ -144,7 +145,6 @@ export default function Browser({ onClose, progressionIds = [] }) {
   const [initialLoad, setInitialLoad] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Replaced DB fetch with a simple immersive delay
   useEffect(() => {
     const timer = setTimeout(() => setInitialLoad(false), 800);
     return () => clearTimeout(timer);
@@ -152,15 +152,15 @@ export default function Browser({ onClose, progressionIds = [] }) {
 
   const navigate = (input) => {
     let target = input.toLowerCase().trim();
-    if (
-      target.includes(".onion") ||
-      target.includes("tor://") ||
-      target === "market"
-    )
-      target = "tor://market.onion";
-    else if (input.startsWith("/")) target = `${BASE_URL}${input}`;
-    else if (!input.startsWith("http") && !input.startsWith("https"))
-      target = `https://${input}`;
+
+    // [FIXED] Smart Aliases & Dark Web Protocol formatting
+    if (target === "market") target = "tor://market.onion";
+    else if (target === "pandora") target = "tor://pandora.onion";
+    else if (target.includes(".onion") && !target.startsWith("tor://"))
+      target = `tor://${target}`;
+    else if (target.startsWith("/")) target = `${BASE_URL}${target}`;
+    else if (!target.startsWith("http") && !target.startsWith("tor://"))
+      target = `https://${target}`;
 
     setIsNavigating(true);
     setUrl(target);
@@ -170,22 +170,28 @@ export default function Browser({ onClose, progressionIds = [] }) {
     }, 800);
   };
 
-  const browserPuzzles = PUZZLE_CONFIG.filter((p) => p.type === "browser");
-
   const renderContent = () => {
     if (url === "tor://market.onion") return <DarkMarket />;
+
     if (url === HOME_URL || url === BASE_URL || url === `${BASE_URL}/`) {
+      // [FIXED] Hides Tor links from Intranet Homepage!
       const browserConfig = PUZZLE_CONFIG.filter(
-        (p) => p.type === "browser" && p.path,
+        (p) =>
+          p.type === "browser" &&
+          p.path &&
+          !p.path.includes(".onion") &&
+          !p.path.includes("tor://"),
       );
       return (
         <IntranetHome onNavigate={navigate} browserPuzzles={browserConfig} />
       );
     }
 
+    // Matches regular Intranet links OR Exact Tor links
     const levelData = PUZZLE_CONFIG.find(
-      (p) => url === `${BASE_URL}/${p.path}`,
+      (p) => url === `${BASE_URL}/${p.path}` || url === p.path,
     );
+
     if (!levelData) return <Error404 url={url} />;
 
     if (levelData.requires && !progressionIds.includes(levelData.requires)) {
@@ -196,10 +202,10 @@ export default function Browser({ onClose, progressionIds = [] }) {
     if (!Component) return <Error404 url={url} />;
 
     const puzzleFlag = getLevelFlag(levelData.id);
-
-    // Inject the flag directly into your decoupled UI!
     return <Component flag={puzzleFlag} />;
   };
+
+  const isDarkWeb = url.startsWith("tor://");
 
   return (
     <div className="h-full bg-white text-black flex flex-col font-sans overflow-hidden relative">
@@ -244,9 +250,9 @@ export default function Browser({ onClose, progressionIds = [] }) {
         </div>
 
         <div
-          className={`flex-1 rounded-full px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 border transition-all min-w-0 ${url === "tor://market.onion" ? "bg-red-950/20 border-red-900/50 text-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_10px_rgba(255,0,0,0.2)]" : "bg-gray-100 border-transparent text-gray-600 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm"}`}
+          className={`flex-1 rounded-full px-4 py-1.5 text-xs sm:text-sm flex items-center gap-2 border transition-all min-w-0 ${isDarkWeb ? "bg-red-950/20 border-red-900/50 text-red-500 focus-within:border-red-500 focus-within:shadow-[0_0_10px_rgba(255,0,0,0.2)]" : "bg-gray-100 border-transparent text-gray-600 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-sm"}`}
         >
-          {url === "tor://market.onion" ? (
+          {isDarkWeb ? (
             <ShieldAlert size={12} className="text-red-600 shrink-0" />
           ) : (
             <Lock size={12} className="text-green-600 shrink-0" />
@@ -256,13 +262,13 @@ export default function Browser({ onClose, progressionIds = [] }) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && navigate(url)}
-            className={`bg-transparent w-full outline-none truncate ${url === "tor://market.onion" ? "text-red-500 font-mono" : "font-sans text-gray-700"}`}
+            className={`bg-transparent w-full outline-none truncate ${isDarkWeb ? "text-red-500 font-mono" : "font-sans text-gray-700"}`}
             spellCheck="false"
           />
           {url && (
             <X
               size={12}
-              className={`${url === "tor://market.onion" ? "text-red-900 hover:text-red-500" : "text-gray-400 hover:text-gray-600"} cursor-pointer`}
+              className={`${isDarkWeb ? "text-red-900 hover:text-red-500" : "text-gray-400 hover:text-gray-600"} cursor-pointer`}
               onClick={() => setUrl("")}
             />
           )}

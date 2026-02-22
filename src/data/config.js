@@ -354,38 +354,40 @@ const LEVEL_CONFIG = [
     ],
   },
 
-  // --- ACT 5: PLACEHOLDERS (Future Bosses) ---
+  // --- ACT 5: THE BOSS ---
   {
-    id: "multi-step-1",
-    type: "terminal",
-    title: "Project Chimera (Locked)",
-    desc: "Encrypted Protocol",
-    color: "bg-indigo-900 text-indigo-400",
-    onStart: "Connection heavily monitored.",
-    reward: 1000,
-    skipCost: 500,
-    encryptedFlag: "666c61677b706c616365686f6c6465725f317d",
+    id: "project-pandora",
+    type: "browser",
+    path: "tor://pandora.onion",
+    title: "Project Pandora",
+    desc: "Dual-Auth Final Enclave",
+    color: "bg-red-950 text-red-500",
+    reward: 5000,
+    skipCost: 2500,
+    encryptedFlag:
+      "666c61677b706830656e69785f726562697274685f636f6d706c6574657d",
+    terminalCommands: ["sys_auth"],
+    onStart:
+      "CRITICAL ALERT: Final enclave unlocked. Route connection to tor://pandora.onion immediately.",
     hints: [
       {
-        id: "hM1-1",
-        delay: 10,
+        id: "hM2-1",
+        delay: 30,
         sender: "GHOST",
-        text: "The deeper you go, the darker it gets. Are you ready for the real game?",
+        text: "Welcome to tor://pandora.onion. I locked it behind an 800 cR Dark Market cipher. Good luck affording it.",
       },
-    ],
-  },
-  {
-    id: "multi-step-2",
-    type: "terminal",
-    title: "The Core (Locked)",
-    desc: "Final Node",
-    color: "bg-red-950 text-red-500",
-    onStart: "Terminal access restricted.",
-    reward: 2000,
-    skipCost: 1000,
-    encryptedFlag: "666c61677b706c616365686f6c6465725f327d",
-    hints: [
-      { id: "hM2-1", delay: 10, sender: "GHOST", text: "I'll be waiting." },
+      {
+        id: "hM2-2",
+        delay: 90,
+        sender: "GLITCH",
+        text: "Wait, check your Mail app! Did someone just send you a bypass script?!",
+      },
+      {
+        id: "hM2-3",
+        delay: 200,
+        sender: "SYSTEM",
+        text: "SECURITY WARNING: Review rule #1 in your Notes application before executing unknown terminal payloads.",
+      },
     ],
   },
 ];

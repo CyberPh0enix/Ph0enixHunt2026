@@ -9,6 +9,9 @@ import {
   Lock,
   Zap,
   Ghost,
+  CheckCircle2,
+  XCircle,
+  Key,
 } from "lucide-react";
 import { LEVEL_CONFIG } from "../../data/config";
 import CountUp from "../ui/CountUp";
@@ -22,11 +25,13 @@ export default function DarkMarket({
 }) {
   const { profile, refreshProfile } = useAuth();
   const [purchaseStatus, setPurchaseStatus] = useState(null);
+  const [confirmItem, setConfirmItem] = useState(null);
   const [hasB64, setHasB64] = useState(false);
+  const [hasPandora, setHasPandora] = useState(false);
 
-  // Check local storage to see if they already bought the B64 tool
   useEffect(() => {
     if (localStorage.getItem("ph0enix_b64_unlocked")) setHasB64(true);
+    if (localStorage.getItem("ph0enix_pandora_key")) setHasPandora(true);
   }, []);
 
   const activeLevel = LEVEL_CONFIG.find(
@@ -36,10 +41,9 @@ export default function DarkMarket({
       !skippedIds.includes(level.id),
   );
 
-  // Dynamic cost pulling directly from config.js!
   const dynamicSkipCost = activeLevel ? activeLevel.skipCost || 50 : 0;
 
-  const MARKET_ITEMS = [
+  let MARKET_ITEMS = [
     {
       id: "b64_module",
       title: "Base64 Decryptor Tool",
@@ -56,7 +60,7 @@ export default function DarkMarket({
       price: 1500,
       icon: Zap,
       color: "text-purple-500",
-      outOfStock: true, // Lore item!
+      outOfStock: true,
     },
     {
       id: "vip_access",
@@ -65,28 +69,26 @@ export default function DarkMarket({
       price: 9999,
       icon: Ghost,
       color: "text-indigo-500",
-      outOfStock: true, // Lore item!
+      outOfStock: true,
     },
   ];
 
-  const handlePurchase = async (item) => {
-    if (item.outOfStock) {
-      setPurchaseStatus({
-        type: "error",
-        msg: "ITEM OUT OF STOCK OR REP TOO LOW.",
-      });
-      setTimeout(() => setPurchaseStatus(null), 3000);
-      return;
-    }
+  // Dynamically item
+  if (activeLevel?.id === "project-pandora") {
+    MARKET_ITEMS.unshift({
+      id: "pandora_key",
+      title: "Pandora Decryption Cipher",
+      desc: "Military-grade cipher. Required to bypass the final enclave locks.",
+      price: 800,
+      icon: Key,
+      color: "text-red-500",
+      isBought: hasPandora,
+    });
+  }
 
-    if (item.isBought) {
-      setPurchaseStatus({
-        type: "warning",
-        msg: "YOU ALREADY OWN THIS MODULE.",
-      });
-      setTimeout(() => setPurchaseStatus(null), 3000);
-      return;
-    }
+  // Handle the actual transaction
+  const executePurchase = async (item) => {
+    setConfirmItem(null); // Close modal
 
     if (profile.credits < item.price) {
       setPurchaseStatus({
@@ -97,7 +99,6 @@ export default function DarkMarket({
       return;
     }
 
-    // Process payment if cost > 0
     if (item.price > 0) {
       const newBalance = profile.credits - item.price;
       const { error: creditError } = await supabase
@@ -114,7 +115,6 @@ export default function DarkMarket({
       await refreshProfile(profile.id);
     }
 
-    // Item Effects
     if (item.id === "skip_level" && activeLevel) {
       const { error: skipError } = await supabase
         .from("skipped_puzzles")
@@ -123,6 +123,9 @@ export default function DarkMarket({
     } else if (item.id === "b64_module") {
       localStorage.setItem("ph0enix_b64_unlocked", "true");
       setHasB64(true);
+    } else if (item.id === "pandora_key") {
+      localStorage.setItem("ph0enix_pandora_key", "true");
+      setHasPandora(true);
     }
 
     setPurchaseStatus({
@@ -132,10 +135,47 @@ export default function DarkMarket({
     setTimeout(() => setPurchaseStatus(null), 3000);
   };
 
+  const handlePurchaseAttempt = (item) => {
+    if (item.outOfStock || item.isBought) return;
+    setConfirmItem(item);
+  };
+
   return (
     <div className="h-full bg-black text-red-500 font-mono flex flex-col animate-in fade-in duration-500 relative">
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none z-0"></div>
       <div className="absolute inset-0 bg-gradient-to-b from-red-900/10 to-black pointer-events-none z-0"></div>
+
+      {/* CONFIRMATION MODAL */}
+      {confirmItem && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-red-950/95 border-2 border-red-500 p-6 max-w-sm w-full shadow-[0_0_50px_rgba(255,0,0,0.3)]">
+            <h2 className="text-xl font-black text-white mb-2 flex items-center gap-2">
+              <AlertTriangle className="text-yellow-500" /> CONFIRM TRANSACTION
+            </h2>
+            <p className="text-sm text-red-200 mb-6">
+              Authorize secure transfer of{" "}
+              <strong className="text-yellow-500">
+                {confirmItem.price} cR
+              </strong>{" "}
+              for <strong className="text-white">{confirmItem.title}</strong>?
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setConfirmItem(null)}
+                className="flex-1 bg-black border border-red-900 text-red-500 py-2 flex items-center justify-center gap-2 hover:bg-red-900/30 transition-colors"
+              >
+                <XCircle size={16} /> ABORT
+              </button>
+              <button
+                onClick={() => executePurchase(confirmItem)}
+                className="flex-1 bg-red-600 border border-red-500 text-white py-2 flex items-center justify-center gap-2 font-bold hover:bg-red-500 shadow-[0_0_15px_rgba(255,0,0,0.5)] transition-colors"
+              >
+                <CheckCircle2 size={16} /> AUTHORIZE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="p-6 border-b border-red-900/50 shrink-0 relative z-10 bg-black/60 backdrop-blur-md">
@@ -178,7 +218,6 @@ export default function DarkMarket({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pb-8">
-            {/* ZERO-DAY BYPASS (Dynamic Cost) */}
             <div className="bg-[#0a0a0a] border border-red-900 p-4 md:p-5 group shadow-[0_0_15px_rgba(255,0,0,0.1)] flex flex-col relative overflow-hidden">
               <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="p-2 md:p-3 bg-black border border-red-900 text-red-500 animate-pulse">
@@ -193,22 +232,11 @@ export default function DarkMarket({
               </h3>
               <p className="text-[10px] md:text-xs text-neutral-500 leading-relaxed mb-4 flex-1 relative z-10">
                 Deploy a syndicate exploit to forcefully bypass the active
-                security node. Price scales dynamically based on target
-                complexity.
+                security node.
               </p>
-
-              <div className="bg-red-950/40 border border-red-900/50 rounded p-2 text-[9px] md:text-[10px] text-red-400 mb-4 flex justify-between items-center relative z-10">
-                <span>TARGET NODE:</span>
-                <span className="font-bold text-white truncate max-w-[120px] md:max-w-none text-right">
-                  {activeLevel
-                    ? activeLevel.title.toUpperCase()
-                    : "NONE ACTIVE"}
-                </span>
-              </div>
-
               <button
                 onClick={() =>
-                  handlePurchase({
+                  handlePurchaseAttempt({
                     id: "skip_level",
                     price: dynamicSkipCost,
                     title: "Zero-Day Bypass",
@@ -217,25 +245,15 @@ export default function DarkMarket({
                 disabled={!activeLevel}
                 className={`w-full py-2.5 md:py-3 font-bold tracking-widest text-[10px] md:text-sm border transition-all mt-auto relative z-10 ${!activeLevel ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed" : "bg-red-900/40 border-red-500 text-red-100 hover:bg-red-600 shadow-[0_0_15px_rgba(255,0,0,0.4)]"}`}
               >
-                {!activeLevel
-                  ? "NO TARGET ACQUIRED"
-                  : `DEPLOY EXPLOIT (-${dynamicSkipCost} cR)`}
+                {!activeLevel ? "NO TARGET ACQUIRED" : `DEPLOY EXPLOIT`}
               </button>
             </div>
 
-            {/* STATIC STORE ITEMS */}
             {MARKET_ITEMS.map((item) => (
               <div
                 key={item.id}
                 className={`border p-4 md:p-5 group transition-all flex flex-col relative overflow-hidden ${item.outOfStock || item.isBought ? "bg-neutral-950/50 border-neutral-900 opacity-60" : "bg-neutral-950 border-red-900/30 hover:border-red-500"}`}
               >
-                {/* Diagonal Tape for Sold Out / Bought */}
-                {(item.outOfStock || item.isBought) && (
-                  <div className="absolute top-6 -right-12 bg-black text-neutral-500 border-y border-neutral-800 px-12 py-1 rotate-45 text-[10px] font-bold tracking-widest z-20">
-                    {item.isBought ? "INSTALLED" : "OUT OF STOCK"}
-                  </div>
-                )}
-
                 <div className="flex justify-between items-start mb-4 relative z-10">
                   <div
                     className={`p-2 md:p-3 bg-black border border-neutral-800 ${item.color}`}
@@ -259,7 +277,7 @@ export default function DarkMarket({
                   {item.desc}
                 </p>
                 <button
-                  onClick={() => handlePurchase(item)}
+                  onClick={() => handlePurchaseAttempt(item)}
                   disabled={item.outOfStock || item.isBought}
                   className={`w-full py-2.5 md:py-3 font-bold tracking-widest text-[10px] md:text-sm border transition-all mt-auto relative z-10 ${item.outOfStock || item.isBought ? "bg-black border-neutral-900 text-neutral-700 cursor-not-allowed" : "bg-red-950/50 border-red-900 text-red-500 hover:bg-red-900 hover:text-white"}`}
                 >
@@ -271,10 +289,6 @@ export default function DarkMarket({
                 </button>
               </div>
             ))}
-          </div>
-
-          <div className="mt-4 md:mt-8 pb-8 text-center text-[8px] md:text-[10px] text-red-900">
-            ALL SALES FINAL. DO NOT TRUST ANYONE.
           </div>
         </div>
       </div>

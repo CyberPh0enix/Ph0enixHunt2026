@@ -13,6 +13,10 @@ import VisualForensics from "../components/puzzles/VisualForensics";
 import { hiddenServicesCommands } from "../components/puzzles/HiddenServices";
 import { dataRecoveryCommands } from "../components/puzzles/DataRecovery";
 
+import ProjectPandora, {
+  pandoraCommands,
+} from "../components/puzzles/ProjectPandora";
+
 // Map Semantic IDs to their Code counterpart
 const CODE_MAP = {
   "first-blood": {},
@@ -28,9 +32,7 @@ const CODE_MAP = {
   "hidden-services": { commands: hiddenServicesCommands },
   "data-recovery": { commands: dataRecoveryCommands },
 
-  // Future Boss Placeholders
-  "multi-step-1": {},
-  "multi-step-2": {},
+  "project-pandora": { component: ProjectPandora, commands: pandoraCommands },
 };
 
 // Merge them automatically

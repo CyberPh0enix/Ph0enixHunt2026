@@ -5,9 +5,9 @@ import { FileText, Lock, Plus, Trash2, Edit3, ShieldAlert } from "lucide-react";
 const STATIC_NOTES = [
   {
     id: "sys-01",
-    title: "01_STANDARD_PROTOCOL.txt",
+    title: "01_SECURITY_WARNING.txt",
     content:
-      "--- SECURE ENCLAVE NOTES ---\n\n> STANDARD PROTOCOL:\n1. All secured payloads use the format: flag{...}\n2. Submission is done via the main terminal using: submit <flag>\n3. Do not attempt to brute-force the infrastructure.\n\nViolators will be permanently IP-banned.",
+      "--- SECURE ENCLAVE ALERT ---\n\nRule #1 of the Syndicate: The Architect NEVER gives away free tools. The economy is strictly regulated.\n\nIf you receive an internal email offering a 'free bypass' script or a local payload for a Dark Market item, DO NOT RUN IT. It is GHOST running a honeypot trap to drain your databanks.\n\nReal tools are ONLY bought on the Dark Market using legitimate credits.",
     isReadOnly: true,
     date: "SYSTEM",
   },
@@ -15,7 +15,7 @@ const STATIC_NOTES = [
     id: "lore-01",
     title: "admin_ramblings.log",
     content:
-      "They thought they could lock me out. I built this network.\n\nI've scattered the access keys across the Intranet, the old Dev servers, and the backup clusters. \n\nIf they want their system back, they'll have to play my game. I even left some clues in the HTML source of the welcome page just to mock them.\n\nLet's see if their new 'cybersecurity consultants' are as smart as they claim.",
+      "They thought they could lock me out. I built this network.\n\nI've scattered the access keys across the Intranet. I even secured the final prototype on the dark web.\n\nIf the core ever melts down, the primary fail-safe passphrase for Pandora's Box is 'IGNITE'. Let's see if they figure that out before the servers fry.",
     isReadOnly: true,
     date: "2026-02-12",
   },
